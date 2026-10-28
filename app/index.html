@@ -3,13 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SecondLook — breast imaging, explained</title>
-  <meta name="description" content="Understand your breast imaging report, try an on-device ultrasound AI, and learn when to see a doctor.">
+  <title>SecondLook: breast imaging results, explained</title>
+  <meta name="description" content="Understand your breast imaging report in plain words, ask questions, and learn when to see a doctor.">
   <link rel="icon" href="logo.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="logo.png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <a class="skip" href="#main">Skip to the main content</a>
   <header class="top">
     <div class="wrap top-inner">
       <a class="brand" href="#home" data-tab="home">
@@ -26,89 +27,105 @@
     </div>
   </header>
 
-  <main class="wrap">
+  <main class="wrap" id="main" tabindex="-1">
     <!-- HOME ------------------------------------------------------------ -->
     <section id="home" class="panel">
       <div class="hero">
-        <p class="eyebrow">Breast cancer · Detection &amp; diagnosis</p>
-        <h1>A second look at breast imaging — earlier, and more clearly.</h1>
-        <p class="lede">Breast imaging reports are written for doctors. The wait between a callback and a biopsy result is often spent
-          searching words like “BI-RADS 4B” or “spiculated” at midnight. SecondLook turns the report into plain language and pictures, shows
-          what an ultrasound AI notices, and tells you clearly when a change in your body should be checked.</p>
+        <p class="eyebrow">For anyone waiting on a breast imaging result</p>
+        <h1>Got a breast imaging result? Let's go through it together.</h1>
+        <p class="lede">Breast imaging reports are written for doctors, not for you. Many people end up searching for words like
+          “BI-RADS 4B” or “spiculated” late at night. SecondLook explains the report in plain words, lets you ask questions about it,
+          and helps you get ready for your next visit. It does not replace your doctor.</p>
         <div class="cta-row">
-          <a class="btn primary" href="#report" data-tab="report">Decode a report</a>
-          <a class="btn" href="#scan" data-tab="scan">Try the ultrasound AI</a>
-          <a class="btn" href="#check" data-tab="check">Check a symptom</a>
+          <a class="btn primary" href="#report" data-tab="report">Explain my report</a>
+          <a class="btn" href="#scan" data-tab="scan">Try the ultrasound demo</a>
+          <a class="btn" href="#check" data-tab="check">Should I see a doctor?</a>
         </div>
         <p class="story" id="story">Inspired by my grandmother’s experience with breast cancer.</p>
       </div>
 
       <div class="stats">
         <div class="stat"><b>1 in 8</b><span>U.S. women will be diagnosed with breast cancer in their lifetime (about 13%).</span></div>
-        <div class="stat"><b>100%</b><span>5-year relative survival when found while still localized — <b>33.8%</b> once it has spread to distant organs.</span></div>
-        <div class="stat"><b>321,910</b><span>new invasive breast cancers expected in U.S. women in 2026, plus 60,730 DCIS.</span></div>
+        <div class="stat"><b>Nearly all</b><span>women are alive 5 years after a breast cancer found while it is still in the breast. After it has spread to far parts of the body, that falls to about <b>34 in 100</b> (33.8%).</span></div>
+        <div class="stat"><b>321,910</b><span>new invasive breast cancers expected in U.S. women in 2026. DCIS, an early form that has not spread, is counted separately (60,730 expected).</span></div>
       </div>
       <p class="fine">Sources: American Cancer Society, <a href="https://www.cancer.org/cancer/types/breast-cancer/about/how-common-is-breast-cancer.html" target="_blank" rel="noopener">How common is breast cancer?</a>;
-        NCI SEER <a href="https://seer.cancer.gov/statfacts/html/breast.html" target="_blank" rel="noopener">Cancer Stat Facts: Female Breast Cancer</a> (2016–2022 survival data).</p>
+        NCI SEER <a href="https://seer.cancer.gov/statfacts/html/breast.html" target="_blank" rel="noopener">Cancer Stat Facts: Female Breast Cancer</a> (survival data for 2016 to 2022).</p>
 
       <div class="cards three">
         <a class="card link" href="#report" data-tab="report">
           <h3>Read my report</h3>
-          <p>Paste a mammogram or ultrasound report. Get the BI-RADS category on a risk scale, your breast density, where the finding is on a
-            diagram, every term explained, and questions to ask.</p>
+          <p>Paste a mammogram or ultrasound report. See what the BI-RADS number means, your breast density, where the finding is, what each
+            word means, and questions to ask. Then ask the assistant anything else.</p>
         </a>
         <a class="card link" href="#scan" data-tab="scan">
           <h3>Ultrasound AI</h3>
-          <p>An image model that runs entirely in your browser. It sorts a breast ultrasound into normal / benign / malignant and highlights
-            the region that drove its answer.</p>
+          <p>A research demo that runs in your browser. It looks at a breast ultrasound image and says whether it looks most like normal,
+            benign (not cancer) or malignant (cancer) images it has seen. It is not a medical test.</p>
         </a>
         <a class="card link" href="#check" data-tab="check">
           <h3>When to see a doctor</h3>
-          <p>A checklist of the warning signs from the CDC and American Cancer Society, plus a screening planner based on the 2024 USPSTF
-            guideline and your family history.</p>
+          <p>A checklist of warning signs from the CDC and the American Cancer Society, and a screening planner that uses your age and
+            family history.</p>
         </a>
       </div>
-      <p class="disclaimer">SecondLook is an educational prototype, not a medical device. It does not diagnose cancer and must never delay or replace care from a qualified clinician.</p>
+      <p class="disclaimer">SecondLook is a learning tool, not a medical device. It cannot tell you whether you have cancer. Please do not use it to put off care from a doctor.</p>
     </section>
 
     <!-- REPORT ---------------------------------------------------------- -->
     <section id="report" class="panel" hidden>
       <h2>Read my report</h2>
-      <p class="lede">Paste the text of a mammogram, ultrasound or biopsy report. Everything stays on this device — nothing is uploaded.</p>
+      <p class="lede">Paste the text of a mammogram, ultrasound or biopsy report. Explaining the report happens on your device and the text is not sent anywhere. Only the chat below sends text to a server, and only when you ask a question.</p>
       <div class="report-grid">
         <div>
           <div class="examples" id="report-examples"></div>
-          <textarea id="report-text" rows="12" placeholder="Paste your report here…" aria-label="Report text"></textarea>
+          <textarea id="report-text" rows="12" placeholder="Paste your report here" aria-label="Report text"></textarea>
           <div class="row">
             <button class="btn primary" id="report-go">Explain this report</button>
             <button class="btn ghost" id="report-clear">Clear</button>
           </div>
         </div>
         <div id="report-out" class="report-out" aria-live="polite">
-          <div class="empty">Choose an example above, or paste a report, then press <b>Explain this report</b>.</div>
+          <div class="empty">Pick an example above, or paste a report, then press <b>Explain this report</b>.</div>
         </div>
       </div>
+
+      <section class="chat card" id="chat" aria-labelledby="chat-h">
+        <h3 id="chat-h">Ask a question</h3>
+        <p class="muted" id="chat-context"></p>
+        <div id="chat-log" class="chat-log" role="log" aria-live="polite" aria-label="Conversation"></div>
+        <div id="chat-suggest" class="examples" aria-label="Suggested questions"></div>
+        <form id="chat-form" class="chat-form">
+          <label for="chat-input" class="sr-only">Your question</label>
+          <textarea id="chat-input" rows="2" maxlength="2000" placeholder="Type your question here"></textarea>
+          <div class="row">
+            <button class="btn primary" id="chat-send" type="submit">Send</button>
+            <button class="btn ghost" id="chat-clear" type="button">Clear chat</button>
+          </div>
+        </form>
+        <p class="fine">When you send a question, your message and the report text you pasted go to our server and then to OpenAI, an outside company, so it can write an answer. Our server does not store them, but OpenAI may keep them for a short time under its own rules. Please do not include your name, birth date or other details that identify you. The assistant can make mistakes. It cannot diagnose you.</p>
+      </section>
     </section>
 
     <!-- SCAN ------------------------------------------------------------ -->
     <section id="scan" class="panel" hidden>
-      <h2>Ultrasound AI</h2>
-      <p class="lede">Choose a held-out test image or upload your own breast ultrasound. The model runs on this device with ONNX Runtime Web.</p>
+      <h2>Ultrasound AI <span class="tag">research demo, not a clinical tool</span></h2>
+      <p class="lede">Pick a sample image or upload your own breast ultrasound. The image stays on your device. This is a research demo, so please do not use it to make health decisions.</p>
       <div class="scan-grid">
         <div>
           <div class="samples" id="scan-samples"></div>
           <label class="drop" id="scan-drop">
-            <input type="file" id="scan-file" accept="image/*" hidden>
-            <span>Drop an ultrasound image here, or <u>browse</u></span>
+            <input type="file" id="scan-file" accept="image/*" class="sr-only">
+            <span>Drop an ultrasound image here, or <u>choose a file</u></span>
           </label>
-          <div class="canvas-wrap"><canvas id="scan-canvas" width="448" height="448"></canvas></div>
+          <div class="canvas-wrap"><canvas id="scan-canvas" width="448" height="448" role="img" aria-label="Ultrasound image preview"></canvas></div>
           <div class="row slider-row">
-            <label for="cam-opacity">Heat-map strength</label>
+            <label for="cam-opacity">Highlight strength</label>
             <input type="range" id="cam-opacity" min="0" max="1" step="0.05" value="0.55">
           </div>
         </div>
         <div id="scan-out" aria-live="polite">
-          <div class="empty" id="scan-status">Loading model…</div>
+          <div class="empty" id="scan-status">Getting the model ready...</div>
         </div>
       </div>
     </section>
@@ -119,22 +136,22 @@
       <div class="check-grid">
         <div class="card">
           <h3>Have you noticed any of these?</h3>
-          <p class="muted">Tick anything that is <b>new or different for you</b>.</p>
+          <p class="muted">Tick anything that is <b>new or different for you</b>. If you tick nothing, this tool still cannot say you are fine.</p>
           <div id="symptoms" class="checklist"></div>
         </div>
         <div class="card">
           <h3>Screening planner</h3>
           <div class="form">
-            <label>Age <input type="number" id="p-age" min="10" max="110" value="45"></label>
+            <label>Your age <input type="number" id="p-age" min="10" max="110" value="45"></label>
             <label>Sex assigned at birth
               <select id="p-sex"><option value="f">Female</option><option value="m">Male</option></select>
             </label>
             <label class="check"><input type="checkbox" id="p-fam1"> A parent, sibling or child had breast cancer</label>
             <label class="check"><input type="checkbox" id="p-fam2"> A grandparent, aunt/uncle or cousin had breast cancer</label>
-            <label class="check"><input type="checkbox" id="p-ovarian"> Anyone in the family had ovarian, fallopian-tube or peritoneal cancer</label>
-            <label class="check"><input type="checkbox" id="p-young"> A relative was diagnosed with breast cancer before age 50, or a male relative had breast cancer</label>
-            <label class="check"><input type="checkbox" id="p-brca"> I (or a relative) carry a BRCA1/2 or other high-risk gene change</label>
-            <label class="check"><input type="checkbox" id="p-rad"> I had radiation therapy to the chest before age 30</label>
+            <label class="check"><input type="checkbox" id="p-ovarian"> Someone in my family had ovarian, fallopian tube or peritoneal cancer</label>
+            <label class="check"><input type="checkbox" id="p-young"> A relative was diagnosed with breast cancer before age 50, or a male relative had it</label>
+            <label class="check"><input type="checkbox" id="p-brca"> I or a relative carry a BRCA1, BRCA2 or other high-risk gene change</label>
+            <label class="check"><input type="checkbox" id="p-rad"> I had radiation to my chest before age 30</label>
             <label class="check"><input type="checkbox" id="p-ashk"> I have Ashkenazi Jewish ancestry</label>
           </div>
         </div>
@@ -144,10 +161,10 @@
 
     <!-- LAB ------------------------------------------------------------- -->
     <section id="lab" class="panel" hidden>
-      <h2>Biopsy lab <span class="tag">for learners</span></h2>
-      <p class="lede">When a needle biopsy samples a lump, a pathologist studies the cells. In the classic Wisconsin study, software measured
-        each cell nucleus from a microscope image. A model reading those 30 measurements reached about 98% accuracy in our tests.
-        Pick a real held-out case and see which measurements push the result toward benign or malignant.</p>
+      <h2>Biopsy lab <span class="tag">for learning</span></h2>
+      <p class="lede">When a needle biopsy takes a sample from a lump, a doctor called a pathologist looks at the cells. In a well known study from
+        Wisconsin, software measured the center of each cell (the nucleus) in microscope images. Our small model reads those 30 measurements.
+        Pick a real example it has not seen before and see which measurements push the answer toward benign (not cancer) or malignant (cancer).</p>
       <div class="lab-grid">
         <div class="card">
           <h3>Case</h3>
@@ -167,9 +184,9 @@
 
   <footer class="foot">
     <div class="wrap">
-      <p><b>Not medical advice.</b> SecondLook is an educational prototype built for the CodeTheCure hackathon. If you notice a change in your
-        breast, contact a doctor. In an emergency call your local emergency number.</p>
-      <p class="muted">Images and text you enter are processed only in this browser tab and are never uploaded.</p>
+      <p><b>This is not medical advice.</b> SecondLook is a learning tool made for the Code the Cure hackathon. If you notice a change in your
+        breast, contact a doctor. In an emergency, call your local emergency number.</p>
+      <p class="muted">Reports, images, symptoms and lab sliders are handled in your browser and are not sent anywhere. The one exception is the chat: your question and report text go to our server and to OpenAI to get an answer.</p>
     </div>
   </footer>
 

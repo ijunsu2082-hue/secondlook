@@ -1,78 +1,64 @@
-# SecondLook — Devpost submission kit
+# SecondLook: Devpost kit
 
-## 1. Project abstract (max 300 words; this one is 268)
+## 1. Project abstract (under 300 words)
 
-> **SecondLook: a second look at breast imaging, earlier and more clearly.**
+> **SecondLook: breast imaging results, explained.**
 >
-> One in eight U.S. women will be diagnosed with breast cancer. Found while localized, 5-year survival is 100%; after distant spread, 33.8% (SEER). Early detection depends on imaging, but imaging reports are written for doctors, and patients spend the anxious days between a callback and a biopsy decoding "BI-RADS 4B" or "spiculated" alone. My grandmother went through this, and it inspired SecondLook.
+> One in eight U.S. women will be diagnosed with breast cancer. Imaging reports are written for doctors, so many people spend the days between a callback and a biopsy searching words like "BI-RADS 4B" or "spiculated" alone. My grandmother's experience with breast cancer inspired this project.
 >
-> SecondLook is a private, browser-only toolkit with four parts:
-> (1) A report decoder that turns a mammogram or ultrasound report into a BI-RADS risk scale, a breast-density picture, the finding's location on a clock-face diagram, 72 explained terms with negation detection, and questions for the doctor.
-> (2) An on-device ultrasound AI (EfficientNet-B0, about 0.2 seconds) that classifies normal, benign or malignant and draws a heat map of its evidence.
-> (3) A symptom and screening checker built on CDC, ACS, NICE and USPSTF 2024 guidance, including family-history and BRCA rules.
-> (4) A biopsy lab that explains a 97.9%-accurate cell-measurement model feature by feature.
+> SecondLook helps people understand a result and get ready to talk with their doctor. Four parts work together:
+> (1) A report explainer reads a mammogram or ultrasound report and shows what the BI-RADS number means, breast density, where the finding is, and what each of 72 words means.
+> (2) A chat assistant sits under the report and answers follow-up questions using the decoded report as context. It keeps "your report says" apart from general information, admits what it cannot know, never says whether someone has cancer, and shows a fixed safety message for urgent symptoms.
+> (3) A symptom and screening checker follows CDC, American Cancer Society, NHS and USPSTF advice.
+> (4) A research demo looks at a breast ultrasound in the browser and shows a highlight map. It uses EfficientNet-B0, which other researchers built, plus a small final step we trained on the public BUSI images.
 >
-> We treated accuracy as a safety issue. The public BUSI ultrasound dataset contains duplicates, some labeled both benign and malignant. We removed 22 conflicting images and kept duplicate groups out of the test folds. With 5-fold grouped cross-validation, our model reaches a malignant-vs-not AUC of 0.90 (95% CI 0.88–0.93). That is lower than the 95–98% claimed with leaky splits, but it is defensible. Every rule cites its source, no text is AI-generated, and no data leaves the device.
+> We tried hard to be honest. We removed copied images from BUSI and tested with copies kept together, and we still say the real accuracy on new patients may be lower. The demo finds about 75 of 100 cancer images in our own test, and it is not a medical test. We wrote 119 test conversations to check the assistant's wording and safety, and we report every run, including failures.
 >
-> SecondLook serves patients and families waiting on results, and communities where ultrasound is the most available breast imaging tool.
+> SecondLook serves people waiting for results.
 
-## 2. Demo video script (target 2:45; max 3:00)
+## 2. Demo video script (about 2:45)
+
+Use only the built-in sample reports, which are made up.
 
 | Time | On screen | Voice-over |
 |---|---|---|
-| 0:00–0:15 | Home page; slow scroll over the stats | "One in eight women will face breast cancer. Found early, 5-year survival is 100%. Found late, it is 34%. My grandmother's experience showed me that the hardest part often isn't the scan. It's understanding the result." |
-| 0:15–0:55 | **Read my report**. Click "Ultrasound — biopsy recommended". Hover over "spiculated" and "not parallel". Scroll to the diagram. | "Paste any mammogram or ultrasound report. SecondLook finds the BI-RADS category, here 4B, and shows what it means: a 10 to 50% chance of cancer, and a biopsy is the next step. It shows density as a picture and places the finding on a clock-face diagram of the left breast. Every term is explained, and terms the report says are absent are struck through. It ends with questions to bring to the appointment." |
-| 0:55–1:40 | **Ultrasound AI**. Click a malignant test image, then a benign one. Move the heat-map slider. Scroll to "How good is this model?". | "This model runs entirely in the browser, so the image never leaves your device. In 0.2 seconds it estimates normal, benign or malignant and highlights the region behind its answer. These test images were never used in training. And we're honest about accuracy. The public dataset has duplicates labeled both benign and malignant, so we removed them and kept duplicates out of the test set. The result is an AUC of 0.90, lower than many papers but real." |
-| 1:40–2:15 | **When to see a doctor**. Tick "a new lump", set age 45, tick "grandparent had breast cancer". | "Have you noticed a change? The checklist uses CDC and American Cancer Society warning signs. A new lump means 'book an appointment now; don't wait for your next screening.' The planner applies the 2024 USPSTF guideline. A grandmother's breast cancer leads to the USPSTF advice on family-risk assessment: plan, don't panic." |
-| 2:15–2:35 | **Biopsy lab**. Case 6 shows "the model gets this one wrong". Drag a slider. | "For learners, the biopsy lab shows how a 98%-accurate model reads cell measurements, and it shows a case it gets wrong." |
-| 2:35–2:50 | **How it works**, then the footer | "Static web app, on-device AI, every rule sourced. SecondLook: a second look, earlier and more clearly." |
+| 0:00 to 0:15 | Home page | "One in eight women will face breast cancer. The hardest part is often waiting and not understanding the report. My grandmother went through that." |
+| 0:15 to 1:00 | Read my report. Click the "Ultrasound, biopsy recommended" sample. Hover over "spiculated". | "Paste a report. SecondLook shows what BI-RADS 4B means and what usually happens next. It shows where the finding is. Every word is explained, and the explaining happens in your browser." |
+| 1:00 to 1:45 | Chat under the report. Click "What can this report not tell me?". Then type "Does this mean I have cancer?". | "Now ask a question. The assistant knows your report. It says what the report says and what is general knowledge. When I ask if I have cancer, it says it cannot tell, and that a biopsy is how doctors find out." |
+| 1:45 to 2:05 | Click "Ask the assistant to tailor these" or the appointment prompt | "It can write questions to bring to the appointment." |
+| 2:05 to 2:20 | Type "I just found a new lump". Show the yellow safety note. | "If someone describes a worrying symptom, a fixed message tells them to get checked soon. That message does not depend on the AI." |
+| 2:20 to 2:40 | Ultrasound AI. Click a sample. Show "How well does this model work?" | "This is a research demo. It runs in the browser. It misses about 1 in 4 cancers in our test, so we say it is not a medical test." |
+| 2:40 to 2:50 | How it works page | "Everything is explained here, including what we built and what we did not." |
 
-**Recording tips:**
-- Record at 1280×800 with browser zoom at 100%.
-- Pre-load the page so the model is warm.
-- Read the voice-over at a calm pace (about 150 words per minute).
+Recording tips: 1280 by 800 window, 100 percent zoom, page already loaded so the model is warm, calm pace.
 
-## 3. Five-minute pitch (finalists)
+## 3. Five-minute pitch
 
-1. **Hook (0:30).** Start with the grandmother story, then the statistic: 1 in 8; 100% vs 33.8% survival by stage.
-2. **Problem (0:40).**
-   - Reports are written for radiologists, and callbacks cause anxiety.
-   - Patients search jargon at midnight.
-   - Warning signs get ignored.
-   - Since September 2024 the FDA has required mammography facilities to tell every patient their breast density, but few patients know what it means.
-3. **Solution walkthrough (1:30).** Show the three main features live: report, then AI, then checker.
-4. **Methodology (0:50).**
-   - BUSI audit and duplicate removal.
-   - Grouped 5-fold cross-validation.
-   - Backbone comparison: EfficientNet-B0 0.904, DINOv2 0.914, ConvNeXt 0.888, all within noise. We picked the smallest.
-   - Exact CAM.
-   - ONNX parity check (difference under 3×10⁻⁶).
-   - Rule engine with sources.
-5. **Architecture (0:30).** Static HTML/JS with ONNX Runtime Web (WASM). No server, so it is private by design, deploys anywhere and works offline.
-6. **Impact and feasibility (0:40).**
-   - Target users: patients awaiting results, caregivers, and clinics in places where ultrasound is the main imaging tool.
-   - The tool costs nothing to run.
-   - Next steps: validate the parser on real de-identified reports, add Spanish and Korean, and run an external ultrasound test set (BUS-BRA, BrEaST).
-7. **Close (0:20).** "Clinical AI like Transpara already finds 29% more cancers in randomized trials (MASAI). SecondLook brings the explanation half of that future to patients today."
+1. **Hook (0:30).** The grandmother story, then "one in eight".
+2. **Problem (0:40).** Reports are written for radiologists. People wait days and search jargon alone.
+3. **Walkthrough (1:30).** Report, then chat, then the symptom check.
+4. **How we made it trustworthy (1:00).**
+   - Report explainer uses fixed, sourced rules.
+   - The chat has a fixed safety layer and a reply guard that stops false reassurance and diagnosis.
+   - 119 test conversations. Show the failures we found and fixed, such as the assistant saying "nothing to worry about".
+   - Ultrasound demo: cleaned data, copies kept together, honest limits.
+5. **What is ours and what is not (0:30).** We did not train the language model or the image backbone. We built the report explainer, the instructions and safety layer, the test set, the cleanup and testing of BUSI, the in-browser version, and the interface.
+6. **Impact and next steps (0:40).** Next: have clinicians review the wording, test the report reader on real de-identified reports, test the ultrasound model on outside data, and add more languages. We have no user data yet and make no claims about impact.
+7. **Close (0:20).** "SecondLook does not replace a doctor. It helps people walk into the room with better questions."
 
-## 4. Likely Q&A
+## 4. Likely questions
 
-**Why is your accuracy lower than published papers?**
-Duplicate leakage. A 2023 audit found duplicates in BUSI, some labeled both benign and malignant. We removed the conflicting ones and grouped the rest. Papers that test on other hospitals drop to 86–88%. Our 0.90 AUC matches the clean BreastMNIST baseline of 0.901.
+**Is the assistant fine-tuned?**
+No. It is a general model from OpenAI with instructions we wrote. We have a set of 119 test conversations to check it, but we did not train anything on them.
 
-**Why not fine-tune, or use Mirai?**
-- We had an 8 GB laptop, so we used a linear probe on frozen features. It takes one forward pass per image.
-- We tested a self-supervised DINOv2 backbone too: 0.914 vs 0.904, not a significant gain.
-- Mirai needs four full-resolution DICOM mammogram views (1664×2048) and is for research use only. We cite it as the forecasting future.
+**Why are your ultrasound numbers lower than papers?**
+Many papers let copies of the same image land in both the practice and test sets. We kept copies together. BUSI also does not say which images belong to the same woman, so our numbers may still be a bit high.
 
-**Could the heat map mislead?**
-It explains the model, not the anatomy. The app says so next to every heat map.
-
-**Is the report parser reliable?**
-It is deterministic and auditable, and it handles common U.S. wording (BI-RADS 0–6 and 4A–C, density A–D, clock positions, cm/mm, negation). It never invents text. Unknown phrasing is simply not highlighted.
+**Could the highlight map mislead?**
+It shows where the model looked. It does not show where a cancer is. The app says this next to every map.
 
 **What about privacy?**
-Nothing is uploaded. Everything runs in the browser tab, and there are no accounts or analytics.
+The explainer, the ultrasound demo, the symptom check and the lab run in the browser. Only the chat sends text, to our server and then to OpenAI. We do not store it. OpenAI may keep it briefly under its own rules. The app says this before and after you use the chat.
 
-**Is this safe?**
-It only ever escalates: it tells people when to see a doctor, never that they are fine. Every page says it is not a medical device.
+**Is it safe?**
+It never says whether someone has cancer and never says "don't worry". Urgent words get a fixed message. It can still be wrong, no clinician has reviewed it yet, and every page says it is not a medical device.

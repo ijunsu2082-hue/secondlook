@@ -23,6 +23,14 @@ function show(tab) {
     started.add(tab);
     Promise.resolve(INIT[tab]()).catch((e) => console.error(e));
   }
+  const heading = document.querySelector("#" + tab + " h2");
+  document.title = (heading ? heading.textContent.replace(/for learning/, "").trim() + " | " : "") + "SecondLook";
+  if (started.has("navigated")) {
+    const target = heading || document.getElementById("main");
+    target.setAttribute("tabindex", "-1");
+    target.focus({ preventScroll: true });
+  }
+  started.add("navigated");
   window.scrollTo({ top: 0 });
 }
 
@@ -35,5 +43,5 @@ document.addEventListener("click", (e) => {
 });
 window.addEventListener("popstate", () => show(location.hash.slice(1)));
 show(location.hash.slice(1));
-// Warm up the model in the background so the first analysis is instant.
+// Get the model ready in the background so the first result is quick.
 setTimeout(() => { if (!started.has("scan")) { started.add("scan"); initScan(); } }, 800);

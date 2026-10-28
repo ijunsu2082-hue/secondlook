@@ -113,7 +113,7 @@ function heat(v) {
   return stops[stops.length - 1][1];
 }
 
-// Mean HSV-style saturation in 0..1 — ultrasound and greyscale scans are ~0.
+// Mean HSV-style saturation in 0..1. Ultrasound and grayscale scans are close to 0.
 export function colourfulness(img) {
   const c = document.createElement("canvas");
   c.width = c.height = 64;
