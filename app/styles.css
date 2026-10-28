@@ -423,3 +423,9 @@ mark.flag::after { content: " check"; font: 800 10.5px/1 var(--font); letter-spa
   .sanity { padding: 16px; border-left-width: 6px; }
   .sanity h3 { font-size: 20px; }
 }
+
+/* Report upload (photo or PDF) */
+#report-drop { margin: 0 0 10px; }
+.ocr-status { margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: var(--info-soft); color: #2c4560; font-size: 14.5px; line-height: 1.5; }
+.ocr-status[data-kind="ok"] { background: var(--watch-soft); color: #5c3d08; }
+.ocr-status[data-kind="bad"] { background: var(--act-soft); color: #7a1f1f; }

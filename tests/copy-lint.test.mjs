@@ -8,7 +8,7 @@ import { EMERGENCY_NOTE, SOON_NOTE } from "../assistant/core.mjs";
 import { BIRADS, DENSITY, TERMS, QUESTIONS, EXAMPLES } from "../app/js/knowledge.js";
 
 const read = (f) => fs.readFileSync(new URL("../" + f, import.meta.url), "utf8");
-const FILES = ["app/index.html", "app/js/report.js", "app/js/scan.js", "app/js/check.js", "app/js/lab.js", "app/js/about.js", "app/js/chat.js", "app/js/knowledge.js", "app/js/sanity.js"];
+const FILES = ["app/index.html", "app/js/report.js", "app/js/scan.js", "app/js/check.js", "app/js/lab.js", "app/js/about.js", "app/js/chat.js", "app/js/knowledge.js", "app/js/sanity.js", "app/js/ocr.js"];
 
 // Words that are fancy, vague or salesy. Add to this list when a new one shows up.
 const BANNED = [/\bleverag/i, /\butiliz/i, /\bseamless/i, /\bcutting[- ]edge/i, /\brevolution/i, /\bempower/i, /\brobust\b/i,

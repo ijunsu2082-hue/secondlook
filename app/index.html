@@ -104,10 +104,15 @@
     <!-- REPORT ---------------------------------------------------------- -->
     <section id="report" class="panel" hidden>
       <h2>Read my report</h2>
-      <p class="lede">Paste the text from your mammogram (a breast X-ray), ultrasound (a picture made with sound waves) or biopsy (a tiny tissue sample) report. Explaining the report happens on your device, and the text is not sent anywhere. The chat below is the one part that sends text out, and it asks your permission first.</p>
+      <p class="lede">Paste the text from your mammogram (a breast X-ray), ultrasound (a picture made with sound waves) or biopsy (a tiny tissue sample) report. You can also upload a photo or PDF of it. Reading a photo or PDF and explaining the report both happen on your device, and the picture and text are not sent anywhere. The chat below is the one part that sends text out, and it asks your permission first.</p>
       <div class="report-grid">
         <div>
           <div class="examples" id="report-examples"></div>
+          <label class="drop" id="report-drop">
+            <input type="file" id="report-file" accept="image/*,application/pdf" class="sr-only">
+            <span>Upload a photo or PDF of your report, or <u>choose a file</u></span>
+          </label>
+          <p class="ocr-status" id="report-file-status" role="status" aria-live="polite" hidden></p>
           <textarea id="report-text" rows="12" placeholder="Paste your report here" aria-label="Report text"></textarea>
           <div class="row">
             <button class="btn primary" id="report-go">Explain this report</button>
