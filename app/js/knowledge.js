@@ -128,7 +128,7 @@ export const BIRADS = {
 
 export const DENSITY = {
   A: { name: "Almost entirely fatty", plain: "Mostly fatty tissue. Mammograms can see through fatty tissue easily." },
-  B: { name: "Scattered areas of fibroglandular density", plain: "Mostly fatty with some scattered dense areas." },
+  B: { name: "Scattered areas of fibroglandular density", plain: "Mostly fatty with some scattered dense areas. Dense tissue is made of milk glands and the tissue that holds them, which doctors call fibroglandular tissue." },
   C: { name: "Heterogeneously dense", plain: "Many dense areas, which can hide small lumps. This counts as “dense breasts”." },
   D: { name: "Extremely dense", plain: "Very dense tissue, which makes it harder for a mammogram to find cancer. This counts as “dense breasts”." },
 };
@@ -137,6 +137,11 @@ export const DENSITY = {
 // context, "act" often a reason for further tests, "info" neutral procedure word.
 export const TERMS = [
   // Exams and procedures
+  ["mammogram", "info", "An X-ray picture of the breast. It can show changes too small to feel."],
+  ["radiologist", "info", "A doctor who reads X-rays, ultrasounds and other pictures, and writes the report."],
+  ["pathologist", "info", "A doctor who studies tissue from a biopsy under a microscope to find out what it is."],
+  ["biopsy", "info", "A test that takes a tiny piece of tissue, usually with a needle, so a doctor can look at it under a microscope."],
+  ["BI-RADS", "info", "A score from 0 to 6 that radiologists use to sum up what they saw and what should happen next."],
   ["screening mammogram", "info", "A routine mammogram for someone with no symptoms."],
   ["diagnostic mammogram", "info", "A mammogram with extra pictures, done to look closely at a symptom or at something seen on a routine mammogram."],
   ["tomosynthesis", "info", "Often called 3D mammography. It takes many thin X-ray slices of the breast, so overlapping tissue is less likely to hide or copy a finding."],
@@ -239,8 +244,13 @@ export const QUESTIONS = {
   dense: [
     "My breasts are dense. Would extra screening, such as an ultrasound or MRI, make sense for me?",
   ],
+  // Neutral on purpose: it does not say the person has a family history. Their report did not necessarily mention one.
   family: [
-    "With my family history, should I have a risk check or talk to a genetic counselor?",
+    "If breast or ovarian cancer runs in my family, should I have a risk check or talk to a genetic counselor?",
+  ],
+  // Used only when the report itself states a family history.
+  familyStated: [
+    "Given the family history in my report, should I have a risk check or talk to a genetic counselor?",
   ],
 };
 

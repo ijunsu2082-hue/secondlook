@@ -31,22 +31,32 @@
     <!-- HOME ------------------------------------------------------------ -->
     <section id="home" class="panel">
       <div class="hero">
-        <p class="eyebrow">For anyone waiting on a breast imaging result</p>
-        <h1>Got a breast imaging result? Let's go through it together.</h1>
-        <p class="lede">Breast imaging reports are written for doctors, not for you. Many people end up searching for words like
-          “BI-RADS 4B” or “spiculated” late at night. SecondLook explains the report in plain words, lets you ask questions about it,
-          and helps you get ready for your next visit. It does not replace your doctor.</p>
-        <div class="cta-row">
-          <a class="btn primary" href="#report" data-tab="report">Explain my report</a>
-          <a class="btn" href="#scan" data-tab="scan">Try the ultrasound demo</a>
-          <a class="btn" href="#check" data-tab="check">Should I see a doctor?</a>
+        <div class="hero-text">
+          <p class="eyebrow">For anyone waiting on a breast imaging result</p>
+          <h1>Got a breast imaging result? Let's go through it together.</h1>
+          <p class="lede">After a mammogram (an X-ray picture of the breast) or an ultrasound (a picture made with sound waves), a doctor writes a report. It is written for other doctors, so it can be hard to read. SecondLook explains it in plain words, answers your questions, and helps you get ready for your next visit. It does not replace your doctor.</p>
+          <div class="cta-row">
+            <a class="btn primary" href="#report" data-tab="report">Explain my report</a>
+            <a class="btn" href="#scan" data-tab="scan">Try the ultrasound demo</a>
+            <a class="btn" href="#check" data-tab="check">Should I see a doctor?</a>
+          </div>
+          <p class="story" id="story">Inspired by my grandmother’s experience with breast cancer.</p>
         </div>
-        <p class="story" id="story">Inspired by my grandmother’s experience with breast cancer.</p>
+        <aside class="hero-card" aria-label="How SecondLook works">
+          <p class="card-title">How it works</p>
+          <ol class="steps">
+            <li><b>Paste your report</b><span>Or pick a made-up sample to try it out.</span></li>
+            <li><b>See it in plain words</b><span>What the numbers and medical words mean.</span></li>
+            <li><b>Ask your questions</b><span>The assistant can see your report.</span></li>
+            <li><b>Get ready for your visit</b><span>Make a list of questions for your doctor.</span></li>
+          </ol>
+          <p class="privacy-chip">Private by default. Only the chat sends text out, and it asks you first.</p>
+        </aside>
       </div>
 
       <div class="stats">
         <div class="stat"><b>1 in 8</b><span>U.S. women will be diagnosed with breast cancer in their lifetime (about 13%).</span></div>
-        <div class="stat"><b>Nearly all</b><span>women are alive 5 years after a breast cancer found while it is still in the breast. After it has spread to far parts of the body, that falls to about <b>34 in 100</b> (33.8%).</span></div>
+        <div class="stat"><b>34%</b><span>5-year survival once breast cancer has spread to far parts of the body (33.8%). When it is found while still in the breast, survival is almost the same as for other women.</span></div>
         <div class="stat"><b>321,910</b><span>new invasive breast cancers expected in U.S. women in 2026. DCIS, an early form that has not spread, is counted separately (60,730 expected).</span></div>
       </div>
       <p class="fine">Sources: American Cancer Society, <a href="https://www.cancer.org/cancer/types/breast-cancer/about/how-common-is-breast-cancer.html" target="_blank" rel="noopener">How common is breast cancer?</a>;
@@ -54,28 +64,47 @@
 
       <div class="cards three">
         <a class="card link" href="#report" data-tab="report">
+          <span class="num-badge" aria-hidden="true">1</span>
           <h3>Read my report</h3>
-          <p>Paste a mammogram or ultrasound report. See what the BI-RADS number means, your breast density, where the finding is, what each
-            word means, and questions to ask. Then ask the assistant anything else.</p>
+          <p>Paste the report from a mammogram, ultrasound or biopsy. See what the BI-RADS score means, what your breast density is, where the finding is, and what each medical word means. Then ask the assistant your questions.</p>
         </a>
         <a class="card link" href="#scan" data-tab="scan">
+          <span class="num-badge" aria-hidden="true">2</span>
           <h3>Ultrasound AI</h3>
-          <p>A research demo that runs in your browser. It looks at a breast ultrasound image and says whether it looks most like normal,
-            benign (not cancer) or malignant (cancer) images it has seen. It is not a medical test.</p>
+          <p>A research demo that runs in your browser. It looks at a breast ultrasound image and says whether it looks most like normal, benign (not cancer) or malignant (cancer) images it has seen. It is not a medical test.</p>
         </a>
         <a class="card link" href="#check" data-tab="check">
+          <span class="num-badge" aria-hidden="true">3</span>
           <h3>When to see a doctor</h3>
-          <p>A checklist of warning signs from the CDC and the American Cancer Society, and a screening planner that uses your age and
-            family history.</p>
+          <p>A checklist of warning signs from the CDC and the American Cancer Society, and a screening planner that uses your age and family history.</p>
         </a>
       </div>
-      <p class="disclaimer">SecondLook is a learning tool, not a medical device. It cannot tell you whether you have cancer. Please do not use it to put off care from a doctor.</p>
+
+      <section class="words" aria-labelledby="words-h">
+        <h3 id="words-h">Words you might see</h3>
+        <dl class="words-grid">
+          <div><dt>Mammogram</dt><dd>An X-ray picture of the breast. It can show changes too small to feel.</dd></div>
+          <div><dt>Ultrasound</dt><dd>A picture made with sound waves. It can show whether a lump is solid or filled with fluid.</dd></div>
+          <div><dt>Biopsy</dt><dd>A test that takes a tiny piece of tissue from the breast, usually with a needle, so a doctor can look at it under a microscope.</dd></div>
+          <div><dt>Radiologist</dt><dd>A doctor who reads X-rays, ultrasounds and other pictures, and writes the report.</dd></div>
+          <div><dt>Pathologist</dt><dd>A doctor who studies tissue from a biopsy under a microscope to find out what it is.</dd></div>
+          <div><dt>BI-RADS</dt><dd>A score from 0 to 6 that radiologists use to sum up what they saw and what should happen next.</dd></div>
+          <div><dt>Benign</dt><dd>Not cancer.</dd></div>
+          <div><dt>Malignant</dt><dd>Cancer.</dd></div>
+          <div><dt>Breast density</dt><dd>How much of the breast is dense tissue (glands and fibers) instead of fat. Dense tissue looks white on a mammogram and can hide small lumps.</dd></div>
+          <div><dt>MRI</dt><dd>A scan that uses magnets and radio waves to make detailed pictures. It is used for some people at higher risk.</dd></div>
+          <div><dt>Lymph nodes</dt><dd>Small bean-shaped glands that are part of your immune system. Some are under the arm.</dd></div>
+          <div><dt>BRCA1 and BRCA2</dt><dd>Genes that help protect against cancer. When they have a harmful change, the chance of breast and ovarian cancer goes up.</dd></div>
+        </dl>
+      </section>
+
+      <p class="disclaimer">SecondLook is a learning tool, not a medical device. It cannot tell you whether you have cancer. No doctor has reviewed it yet. Please do not use it to put off care from a doctor.</p>
     </section>
 
     <!-- REPORT ---------------------------------------------------------- -->
     <section id="report" class="panel" hidden>
       <h2>Read my report</h2>
-      <p class="lede">Paste the text of a mammogram, ultrasound or biopsy report. Explaining the report happens on your device and the text is not sent anywhere. Only the chat below sends text to a server, and only when you ask a question.</p>
+      <p class="lede">Paste the text from your mammogram (a breast X-ray), ultrasound (a picture made with sound waves) or biopsy (a tiny tissue sample) report. Explaining the report happens on your device, and the text is not sent anywhere. The chat below is the one part that sends text out, and it asks your permission first.</p>
       <div class="report-grid">
         <div>
           <div class="examples" id="report-examples"></div>
@@ -93,24 +122,43 @@
       <section class="chat card" id="chat" aria-labelledby="chat-h">
         <h3 id="chat-h">Ask a question</h3>
         <p class="muted" id="chat-context"></p>
-        <div id="chat-log" class="chat-log" role="log" aria-live="polite" aria-label="Conversation"></div>
-        <div id="chat-suggest" class="examples" aria-label="Suggested questions"></div>
-        <form id="chat-form" class="chat-form">
-          <label for="chat-input" class="sr-only">Your question</label>
-          <textarea id="chat-input" rows="2" maxlength="2000" placeholder="Type your question here"></textarea>
+
+        <div id="chat-gate" class="gate" role="region" aria-labelledby="gate-h">
+          <h4 id="gate-h">Before you chat: where your words go</h4>
+          <p>Everything else on SecondLook stays in your browser. The chat is different. To write an answer, it has to send your words to an outside company.</p>
+          <ul>
+            <li><b>What is sent:</b> each question you type, and the full text of the report you explained above (if you did).</li>
+            <li><b>Where it goes:</b> to our server, and then to OpenAI, the company that runs the AI.</li>
+            <li><b>What happens to it:</b> our server does not save it. OpenAI may keep it for a short time under its own rules, which we do not control.</li>
+            <li><b>What to leave out:</b> your name, birth date, address, and anything else that could point to you. If you just want to try it, use one of the made-up sample reports.</li>
+          </ul>
+          <p id="gate-report" class="gate-report"></p>
           <div class="row">
-            <button class="btn primary" id="chat-send" type="submit">Send</button>
-            <button class="btn ghost" id="chat-clear" type="button">Clear chat</button>
+            <button class="btn primary" id="gate-accept" type="button">I understand. Start chatting.</button>
+            <span class="fine">No thanks? You can keep using the rest of SecondLook.</span>
           </div>
-        </form>
-        <p class="fine">When you send a question, your message and the report text you pasted go to our server and then to OpenAI, an outside company, so it can write an answer. Our server does not store them, but OpenAI may keep them for a short time under its own rules. Please do not include your name, birth date or other details that identify you. The assistant can make mistakes. It cannot diagnose you.</p>
+        </div>
+
+        <div id="chat-main" hidden>
+          <div id="chat-log" class="chat-log" role="log" aria-live="polite" aria-label="Conversation"></div>
+          <div id="chat-suggest" class="examples" aria-label="Suggested questions"></div>
+          <form id="chat-form" class="chat-form">
+            <label for="chat-input" class="sr-only">Your question</label>
+            <textarea id="chat-input" rows="2" maxlength="2000" placeholder="Type your question here"></textarea>
+            <div class="row">
+              <button class="btn primary" id="chat-send" type="submit">Send</button>
+              <button class="btn ghost" id="chat-clear" type="button">Clear chat</button>
+            </div>
+          </form>
+          <p class="fine lock-note">Your messages and report text go to OpenAI through our server. The assistant can make mistakes and cannot diagnose you.</p>
+        </div>
       </section>
     </section>
 
     <!-- SCAN ------------------------------------------------------------ -->
     <section id="scan" class="panel" hidden>
       <h2>Ultrasound AI <span class="tag">research demo, not a clinical tool</span></h2>
-      <p class="lede">Pick a sample image or upload your own breast ultrasound. The image stays on your device. This is a research demo, so please do not use it to make health decisions.</p>
+      <p class="lede">An ultrasound is a picture made with sound waves. Pick a sample image or upload your own breast ultrasound. The image stays on your device. This is a research demo, not a clinical tool, so please do not use it to make health decisions.</p>
       <div class="scan-grid">
         <div>
           <div class="samples" id="scan-samples"></div>
@@ -141,6 +189,7 @@
         </div>
         <div class="card">
           <h3>Screening planner</h3>
+          <p class="muted">Screening means checking people who have no symptoms. A screening mammogram is a routine breast X-ray. BRCA1 and BRCA2 are genes that, when changed, raise the chance of breast and ovarian cancer.</p>
           <div class="form">
             <label>Your age <input type="number" id="p-age" min="10" max="110" value="45"></label>
             <label>Sex assigned at birth
@@ -162,7 +211,7 @@
     <!-- LAB ------------------------------------------------------------- -->
     <section id="lab" class="panel" hidden>
       <h2>Biopsy lab <span class="tag">for learning</span></h2>
-      <p class="lede">When a needle biopsy takes a sample from a lump, a doctor called a pathologist looks at the cells. In a well known study from
+      <p class="lede">When a biopsy (a test that takes a tiny piece of tissue, usually with a needle) is done on a lump, a doctor called a pathologist looks at the cells. In a well known study from
         Wisconsin, software measured the center of each cell (the nucleus) in microscope images. Our small model reads those 30 measurements.
         Pick a real example it has not seen before and see which measurements push the answer toward benign (not cancer) or malignant (cancer).</p>
       <div class="lab-grid">

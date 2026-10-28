@@ -93,7 +93,7 @@ async function run(src, sample, force = false) {
   const tone = name === "malignant" ? "act" : name === "benign" ? "watch" : "ok";
   const msg = {
     malignant: "This image looks most like the cancer images the model learned from. Only a biopsy can show whether something is cancer.",
-    benign: "This image looks most like the benign images the model learned from, such as cysts or fibroadenomas. Benign means not cancer.",
+    benign: "This image looks most like the benign images the model learned from, such as fluid-filled sacs (cysts) or harmless lumps (fibroadenomas). Benign means not cancer.",
     normal: "The model did not see a lump-like pattern. One image that looks normal can never rule out cancer.",
   }[name];
 

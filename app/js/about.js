@@ -28,11 +28,14 @@ export async function initAbout() {
 
   body.innerHTML = `
   <div class="card">
-    <h3>How the pieces fit together</h3>
-    <div class="flow"><span>You paste a report</span><b>→</b><span>The page explains it in your browser</span><b>→</b>
-      <span>You ask questions in the chat</span><b>→</b><span>You leave with questions for your doctor</span></div>
+    <h3>Rules, a language model and an image model: each does its own job</h3>
+    <div class="jobs">
+      <div class="job rules"><span class="job-tag">Fixed rules</span><b>Reads your report</b><p>Finds the BI-RADS score, breast density, where the finding is, and what each word means. The same report always gives the same answer, and nothing is made up.</p></div>
+      <div class="job llm"><span class="job-tag">Language model</span><b>Explains and answers</b><p>Uses what the rules found to explain it in everyday words, answer follow-up questions, and write questions for your doctor. It can be wrong, so it has fixed safety notes around it.</p></div>
+      <div class="job img"><span class="job-tag">Our image model</span><b>Looks at ultrasound pictures</b><p>A separate research demo. It looks at the pixels of an ultrasound image. It does not feed into the report reader or the chat.</p></div>
+    </div>
     <p class="muted" style="margin-bottom:0"><b>What stays on your device:</b> explaining a report, the ultrasound demo, the symptom check and the biopsy lab all run in your browser.
-      <b>What is sent out:</b> only the chat. When you send a question, your message and your report text go to our server, which passes them to OpenAI to write an answer.
+      <b>What is sent out:</b> only the chat, and only after you agree. Your message and your report text go to our server, which passes them to OpenAI to write an answer.
       Our server does not store them. OpenAI may keep them for a short time under its own rules.</p>
   </div>
 
@@ -59,12 +62,13 @@ export async function initAbout() {
       <h3>Ultrasound demo: where it comes from</h3>
       <p class="fine"><b>This is a research demo. It is not a medical test.</b></p>
       <table><tbody>
-        <tr><th>Image reader</th><td>EfficientNet-B0, a public image model made by Google researchers (Tan and Le, 2019). We use the version trained on ImageNet photos that is shared in the open-source <code>timm</code> library. We did not build or train it.</td></tr>
-        <tr><th>Images</th><td>The public BUSI set: 780 breast ultrasound images from 600 women aged 25 to 75, at Baheya Hospital in Cairo (${a("https://doi.org/10.1016/j.dib.2019.104863", "Al-Dhabyani et al., 2020")}).</td></tr>
-        <tr><th>What we added</th><td>A small final step trained on top of the image reader (a method called logistic regression), a cleanup of copied images, a repeated testing method, a conversion so the model runs inside your browser, and the highlight map.</td></tr>
+        <tr><th>The pretrained part</th><td>EfficientNet-B0, a public image model made by Google researchers (Tan and Le, 2019), with weights from the open-source <code>timm</code> library that were trained on ImageNet (a huge collection of everyday photos). We did not build it, and we kept it frozen. We did not change its weights.</td></tr>
+        <tr><th>The part we trained</th><td>A final layer, a simple classifier called logistic regression, trained on 1,280 numbers that the frozen model produces for each image. Training takes minutes on a laptop.</td></tr>
+        <tr><th>Images</th><td>BUSI, a public set of 780 breast ultrasound images from 600 women aged 25 to 75, at Baheya Hospital in Cairo (${a("https://doi.org/10.1016/j.dib.2019.104863", "Al-Dhabyani et al., 2020")}).</td></tr>
+        <tr><th>What else we built</th><td>The data cleanup, a testing method that keeps copies of a picture together, a conversion so the model runs inside your browser (checked against the original), and the highlight map.</td></tr>
         <tr><th>Cleanup</th><td>Other researchers found copies of the same image in BUSI, some labeled both benign and malignant (${a("https://pmc.ncbi.nlm.nih.gov/articles/PMC10293973/", "Pawłowska et al., 2023")}).
           We looked for copies, kept each group of copies together when testing, and removed ${m.n_label_conflict_images_removed} images with conflicting labels. That left ${m.n_images_clean} images.</td></tr>
-        <tr><th>Highlight map</th><td>Shows which parts of the image raised the score for a group the most. It shows where the model looked. It does not prove that a cancer is there.</td></tr>
+        <tr><th>Highlight map</th><td>Shows which parts of the image raised the score for a group the most. The strongest spot is always drawn brightest, so a map always shows a hot spot, even when the model is unsure. It shows where the model looked. It does not show where a cancer is.</td></tr>
       </tbody></table>
       <h3 style="margin-top:18px">Test results (average over 5 rounds, with spread)</h3>
       <table><tbody>
@@ -77,7 +81,7 @@ export async function initAbout() {
       </tbody></table>
       <p class="fine">The model in this app is from the first test round (${m.test_metrics.n} test images). In its table of answers, each row is the true group
         (normal, benign, malignant) and each number is how many images got each answer: ${cm.map((r) => "[" + r.join(", ") + "]").join(" ")}.
-        The browser copy of the model gives the same answers as the original to within ${m.onnx_parity_max_abs_diff.toExponential(1)}.</p>
+        The converted model gives the same answers as the original to within ${m.onnx_parity_max_abs_diff.toExponential(1)}. In the browser, on the 6 sample images, the answers differ from the Python reference by at most 0.015, because the browser shrinks images a little differently.</p>
       ${comp}
     </div>
 
@@ -91,11 +95,11 @@ export async function initAbout() {
       <h3 style="margin-top:18px">What professional breast AI looks like today</h3>
       <p class="fine">We checked these numbers against the papers and summaries linked here, but they are not our results. Some come from studies paid for by the company that makes the tool.</p>
       <table><thead><tr><th>System</th><th>What the study found</th></tr></thead><tbody>
-        <tr><td>Transpara, MASAI trial, Sweden</td><td>About 106,000 women were randomly given AI-supported screening or the usual two-doctor reading. AI-supported screening found 29% more cancers (6.4 vs 5.0 per 1,000) and cut the number of screen readings by 44% (${a("https://www.thelancet.com/journals/landig/article/PIIS2589-7500(24)00267-X/fulltext", "Lancet Digital Health 2025")}). A follow-up report found that cancers appearing between screenings were not more common with AI (${a("https://www.sciencedirect.com/science/article/abs/pii/S014067362502464X", "Lancet 2026")}). It still needs at least one human doctor.</td></tr>
+        <tr><td>Transpara, MASAI trial, Sweden</td><td>About 106,000 women were randomly given AI-supported screening (routine mammograms checked with AI help) or the usual reading by two doctors. AI-supported screening found 29% more cancers (6.4 vs 5.0 per 1,000) and cut the number of screen readings by 44% (${a("https://www.thelancet.com/journals/landig/article/PIIS2589-7500(24)00267-X/fulltext", "Lancet Digital Health 2025")}). A follow-up report found that cancers appearing between screenings were not more common with AI (${a("https://www.sciencedirect.com/science/article/abs/pii/S014067362502464X", "Lancet 2026")}). It still needs at least one human doctor.</td></tr>
         <tr><td>Vara, PRAIM study, Germany</td><td>463,094 women in real screening. Cancers found: 6.7 vs 5.7 per 1,000, with no extra call-backs (${a("https://pmc.ncbi.nlm.nih.gov/articles/PMC11922743/", "Nature Medicine 2025")}). This study only observed, it did not run a trial.</td></tr>
         <tr><td>Lunit INSIGHT MMG</td><td>In a reader study that Lunit paid for, doctors scored 0.810 alone and 0.881 with AI help (${a("https://www.thelancet.com/pdfs/journals/landig/PIIS2589-7500(20)30003-0.pdf", "Lancet Digital Health 2020")}).</td></tr>
         <tr><td>Mirai</td><td>Estimates the risk of breast cancer over the next 1 to 5 years from one mammogram. Scores ranged from 0.75 to 0.84 across 7 hospitals in 5 countries (${a("https://pmc.ncbi.nlm.nih.gov/articles/PMC9148689/", "JCO 2022")}). Research software.</td></tr>
-        <tr><td>Clairity Breast</td><td>The first FDA-authorized AI that predicts 5-year breast cancer risk from a mammogram (May 2025).</td></tr>
+        <tr><td>Clairity Breast</td><td>The first AI tool authorized by the U.S. Food and Drug Administration (FDA) to predict 5-year breast cancer risk from a mammogram (May 2025).</td></tr>
       </tbody></table>
       <p class="fine">These tools need full-size mammograms from the hospital system. SecondLook helps with a different step: understanding your report and knowing when to act.</p>
     </div>

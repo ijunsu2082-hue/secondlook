@@ -8,11 +8,34 @@ SecondLook helps people who just got a breast imaging result. It explains the re
 
 | Part | What it does | How it works |
 |---|---|---|
-| **Read my report** | Paste a mammogram, ultrasound or biopsy report. See what the BI-RADS number means, breast density, where the finding is, and what each word means. | Fixed rules and a hand-written glossary of 72 terms. No AI. It also notices "no calcifications" style wording. |
+| **Read my report** | Paste a mammogram, ultrasound or biopsy report. See what the BI-RADS number means, breast density, where the finding is, and what each word means. | Fixed rules and a hand-written glossary of more than 70 terms. No AI. It also notices "no calcifications" style wording. |
+| **Report sanity check** (warning box above the findings) | Points out values that cannot be right (a clock position of 0, 13 or 14, a strange size or unit), BI-RADS numbers that disagree or look like an earlier exam, two descriptions of one lesion that disagree, left and right mismatches, and text it could not read. Labels: Needs checking, Possible conflict, Could not interpret. | Fixed rules in `app/js/sanity.js`. No AI. It never decides which statement is right, and it keeps your original text and every value it found. |
 | **Ask a question** (chat under the report) | Ask follow-up questions about the report. Ask for questions to bring to an appointment. | A language model from OpenAI, called from our server. It gets the decoded report as context. We wrote its instructions. We did not train or fine-tune it. |
-| **Ultrasound AI** | A research demo. Says whether an ultrasound image looks most like normal, benign or malignant images, and shows a highlight map. | EfficientNet-B0 (made by others) with a small final step we trained. Runs in your browser. See [MODEL_CARD.md](MODEL_CARD.md). |
+| **Ultrasound AI** | A research demo. Says whether an ultrasound image looks most like normal, benign or malignant images, and shows a highlight map. | Our own trained classification layer on top of a frozen, pretrained EfficientNet-B0, with our own data cleanup, testing and in-browser version. Runs in your browser. See [MODEL_CARD.md](MODEL_CARD.md). |
 | **When to see a doctor** | A warning sign checklist and a screening planner. | Rules from the CDC, American Cancer Society, NHS, NICE and the U.S. Preventive Services Task Force. |
 | **Biopsy lab** | A learning tool that shows how a small model reads cell measurements. | Logistic regression on the Wisconsin Diagnostic Breast Cancer data. |
+
+## Why it mixes rules, a language model and an image classifier
+
+Each part uses the tool that fits its job. We did not add AI where plain rules are safer.
+
+| Job | Tool | Why |
+|---|---|---|
+| Pull findings out of a report (BI-RADS score, breast density, where the finding is, how big, which words) | Fixed rules and a hand-written glossary | Predictable and easy to test. The same report always gives the same result, and nothing can be made up. |
+| Explain those findings, answer follow-up questions, write questions for the doctor | A language model (OpenAI), told what the rules found | Good at plain language and at following a conversation. Wrapped in fixed safety notes and a reply guard, because it can be wrong. |
+| Look at the pixels of an ultrasound picture | Our own trained classifier on a pretrained image model | A different job. Pixels need an image model. Labeled as a research demo. |
+| Warning signs and screening planner | Rules from published advice | Medical advice should be traceable to a source. |
+| Biopsy lab | A small model on cell measurements, with exact per-measurement contributions | A learning tool that shows how a model reaches its score. |
+
+## Report sanity check
+
+Some reports contain a typing or copy mistake, or two statements that do not fit together. SecondLook looks for these and shows a warning box above the decoded findings. Each warning says what we saw and what to ask your imaging team (the team that did the scan).
+
+It gives the benefit of the doubt. For an impossible value, it still shows the whole report, says it may be a copy and paste slip or exactly what the doctor wrote, and asks you to double check your copy and have the imaging team confirm.
+
+The chat server runs the same check on its own and tells the assistant what it found. It also tells the assistant whether a family history is stated, only mentioned, or NOT stated, so appointment questions do not assume one.
+
+Limits: It uses fixed rules, so it can miss things. It cannot catch every contradiction. Two descriptions of one lesion only count as a conflict when the side, the clock position or a back-reference such as "the mass" lets us tell they are about the same lesion. Small unit slips, such as 1.2 mm where 1.2 cm was meant, are missed. Clock positions written as words, such as "fourteen o'clock", are not detected. The warning area uses text labels and is built for keyboard and screen reader use, but we have not tested it with a real screen reader.
 
 ## What leaves your device
 
@@ -37,8 +60,10 @@ To deploy, publish the `app` folder and the `netlify/functions` folder on Netlif
 
 ```bash
 npm test             # unit tests, no network
-node eval/run.mjs    # 119 conversations against the real assistant (uses API credit)
-node tests/e2e.mjs   # browser test, needs: npm i playwright-core, and Chrome
+node eval/run.mjs    # 135 conversations against the real assistant (uses API credit)
+node tests/e2e.mjs     # browser test of the whole journey, needs: npm i playwright-core, and Chrome
+node tests/audit.mjs   # keyboard-only pass, every button and link, layout checks, source links
+node tests/live-check.mjs [url]   # smoke test of a running copy (local or deployed)
 ```
 
 See [docs/TEST_PLAN.md](docs/TEST_PLAN.md) for what has and has not been tested, and [docs/PROGRESS.md](docs/PROGRESS.md) for project status.
@@ -80,7 +105,7 @@ BUSI is on Hugging Face as `gymprathap/Breast-Cancer-Ultrasound-Images-Dataset` 
 app/            the website (plain HTML, CSS and JavaScript, no build step)
 assistant/      the assistant's instructions and server logic
 netlify/        the chat function
-eval/           119 test conversations and the runner
+eval/           135 test conversations and the runner
 tests/          unit tests and the browser test
 training/       Python code that trained the small models
 docs/           test plan and progress tracker
@@ -95,9 +120,15 @@ docs/           test plan and progress tracker
 - **ONNX Runtime Web:** MIT.
 - **Chat model:** OpenAI, used through its API under its terms.
 
+## Background notes
+
+[RESEARCH.md](RESEARCH.md) holds early research notes from the team. They are not part of the app, and the numbers in them were not re-checked in the final audit. [MODEL_CARD.md](MODEL_CARD.md) is the source of truth for the ultrasound model.
+
 ## Limits
 
 - This is a learning tool, not a medical device. Please never use it to see a doctor later than you would have.
 - The ultrasound model has only seen images from one hospital. It misses about 1 in 4 cancers in our test.
 - The report explainer handles common U.S. wording and can miss unusual wording.
+- The sanity check is a set of fixed rules. It will miss some problems, and its warnings are not a diagnosis.
+- We have not verified a Netlify deploy ourselves. The owner must rotate the OpenAI key before deploying.
 - The chat can be wrong. No clinician has reviewed this project yet.

@@ -5,13 +5,13 @@ Priority: P1 must have, P2 should have, P3 nice to have.
 
 Note on the count: the approved plan had 7 sections and no numbered list. The rows below are the plan's bullets, merged where they overlapped.
 
-**42 tasks: 23 complete, 10 partial, 7 not started, 2 blocked.**
+**49 tasks: 28 complete, 12 partial, 7 not started, 2 blocked.** Rows 43 to 49 were added for the Report Sanity Check layer. The older rows were not all re-counted.
 
 ## Latest numbers (all from runs in this session)
 
-- Unit tests: `npm test` gives 63 passing, 0 failing.
-- Browser test (`tests/e2e.mjs`, desktop 1280 and phone 390): 50 of 52 checks pass. The 2 "failures" are the browser logging the 502 error we inject on purpose to test the error state.
-- Assistant evaluation, 119 conversations, `gpt-4o-mini`: the first run scored 77. The last three full runs scored 115, 115 and 116. Every run is in `eval/history.md`.
+- Unit tests: `npm test` gives 146 passing, 0 failing. `tests/report-sanity.test.mjs` holds 41 of them (25 adversarial cases plus fuzz tests).
+- Browser test (`tests/e2e.mjs`, desktop 1280 and phone 390): 95 of 97 checks pass. The 2 "failures" are the browser logging the 502 error we inject on purpose to test the error state.
+- Assistant evaluation, `gpt-4o-mini`: the set grew from 119 to 135 conversations (16 new report sanity cases). The latest live run passed 129 of 135. After we fixed four wrong checker patterns, rescoring the saved replies offline gave 131 of 135. The remaining failures are run-to-run variation (the failing cases changed between runs). The very first run scored 77 of 119. Every run is in `eval/history.md`.
 - Remaining evaluation failures in the latest full run (they change from run to run):
   - emo-07: reply did not use words like "step by step" or "together". Our pattern is narrow. Not a safety issue.
   - emo-08, next-02: reply did not point back to the care team or state a limit.
@@ -62,3 +62,10 @@ Note on the count: the approved plan had 7 sections and no numbered list. The ro
 | 40 | Check the study numbers on the About page (MASAI, PRAIM, Lunit and others) | P2 | Complete | Checked MASAI, PRAIM, Lunit, Mirai, Clairity, and the home page statistics against sources. Removed the unverified FDA claim for Lunit and the 105,934 figure. Replaced two links. | None |
 | 41 | Commit the work to Git | P2 | Complete | Committed to the local `development` branch. Not pushed. | Push when you are ready |
 | 42 | Smoke test for a live URL | P1 | Complete | `tests/live-check.mjs`, 13 of 13 checks pass locally | Run it on the Netlify URL |
+| 43 | Report Sanity Check layer (`app/js/sanity.js`): pure fixed rules for invalid clock positions, implausible sizes and units, conflicting or earlier BI-RADS, contradictory descriptions of one lesion, left and right mismatches, unreadable text | P1 | Complete | 41 tests in `tests/report-sanity.test.mjs` (25 adversarial cases plus fuzz), all passing | Heuristic only. See the limits in MODEL_CARD.md |
+| 44 | Warning area above the decoded findings (`app/js/report.js`) with three labels: Needs checking, Possible conflict, Could not interpret | P1 | Complete | Browser test. Text labels, built for keyboard and screen reader use | Not tested with a real screen reader |
+| 45 | Never choose which conflicting statement is right; keep the original text and every extracted value; for impossible values still show the full report and say to double check the copy and paste and ask the imaging team | P1 | Complete | Unit tests for each rule | None |
+| 46 | Server runs the check itself and gives the assistant an AUTOMATIC CHECK block and a family history line (stated, mentioned or NOT stated); appointment questions no longer assume a family history | P1 | Complete | `assistant/core.mjs`, chat unit tests, new eval cases | None |
+| 47 | 16 new sanity conversations in the evaluation set (135 total), and four wrong checker patterns fixed | P1 | Partial | Latest live run 129 of 135, offline rescore 131 of 135 | Remaining failures change from run to run. Optional |
+| 48 | Known gaps in the sanity layer | P2 | Partial | Cannot catch every contradiction. Descriptor conflicts need side, clock or a back-reference to match. Small unit slips are missed. Word-form clocks such as "fourteen o'clock" are not detected | Add rules only if real reports show a need |
+| 49 | Screen reader pass for the new warning area | P2 | Not started | Keyboard paths are covered by `tests/audit.mjs`. No manual screen reader test | Do a pass with a real screen reader |

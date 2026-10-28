@@ -1,6 +1,7 @@
 // Server-side logic for the chat assistant. No browser code lives here and the
 // API key is only ever read from the environment.
-import { SYSTEM_PROMPT, buildContext } from "./prompt.mjs";
+import { SYSTEM_PROMPT, buildContext, runReportCheck } from "./prompt.mjs";
+import { missingDefinitions } from "./glossary.mjs";
 
 export const LIMITS = { messages: 20, messageChars: 2000, reportChars: 12000 };
 const FEATURES = new Set(["report", "scan", "check", "lab"]);
@@ -30,6 +31,10 @@ export const NO_GUARANTEE_NOTE =
 const ASSUMES_CLEAR = /(definitely|certainly|for sure|100%|totally|completely)[^.?!]{0,20}(don'?t|do not|doesn'?t|no) (have|cancer)|means? (i|that i) (don'?t|do not|am not|have no)[^.?!]{0,12}cancer|cancer[- ]free|in the clear/i;
 export const needsCaution = (text) => ASSUMES_CLEAR.test(text);
 
+// Shown when the server's own rule check finds something odd in the report text. It does not
+// depend on the model, so the person sees it even if the model forgets to mention the problem.
+export const REPORT_CHECK_NOTE =
+  "Heads up: the automatic check found something in your report text that may be a copy or typing mistake, or may not match. Please check the original report or ask your imaging team to explain it.";
 export const SCAN_NOTE =
   "The ultrasound feature is a research demonstration. It is not a clinical tool or a medical test, and it should not be used to make health decisions.";
 export const PRIVACY_NOTE =
@@ -53,6 +58,7 @@ export function validate(body) {
     if (m.content.length === 0 || m.content.length > LIMITS.messageChars) return `Messages must be between 1 and ${LIMITS.messageChars} characters.`;
   }
   if (messages[messages.length - 1].role !== "user") return "The last message must come from you.";
+  if (body.known != null && (!Array.isArray(body.known) || body.known.length > 30 || body.known.some((k) => typeof k !== "string" || k.length > 30))) return "The list of explained words was not in the right format.";
   if (report != null) {
     if (typeof report !== "object" || typeof report.text !== "string") return "The report was not in the right format.";
     if (report.text.length > LIMITS.reportChars) return `The report is too long. The limit is ${LIMITS.reportChars} characters.`;
@@ -136,7 +142,11 @@ export async function respond(body, { apiKey, model = "gpt-4o-mini", fetchImpl =
   }
   if (out.error) return { status: 502, json: { error: out.error, note } };
   const feature = out.feature || suggestFeature(last);
-  return { status: 200, json: { reply: out.text, feature, note: note || (feature === "scan" ? SCAN_NOTE : null), urgency: level } };
+  // The server runs its own rule check on the report text. It never trusts the page for this.
+  const check = body.report?.text ? runReportCheck(body.report.text) : null;
+  const flagged = !!(check && check.warnings && check.warnings.length);
+  const baseNote = note || (feature === "scan" ? SCAN_NOTE : null);
+  return { status: 200, json: { reply: out.text, feature, note: baseNote || (flagged ? REPORT_CHECK_NOTE : null), reportCheck: flagged, urgency: level, words: missingDefinitions(out.text, body.known || []) } };
 }
 
 // Simple per-address limit. In-memory, so it resets when the function restarts.

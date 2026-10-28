@@ -5,7 +5,7 @@
 const base = (process.argv[2] || "http://localhost:8000").replace(/\/$/, "");
 let failed = 0;
 const check = (name, ok, extra = "") => { if (!ok) failed++; console.log((ok ? "PASS " : "FAIL ") + name + (extra ? "  " + extra : "")); };
-const chat = (body, method = "POST") => fetch(base + "/api/chat", { method, headers: { "Content-Type": "application/json" }, body: method === "POST" ? JSON.stringify(body) : undefined });
+const chat = (body, method = "POST") => fetch(base + "/api/chat", { method, headers: { "Content-Type": "application/json" }, body: method === "POST" ? JSON.stringify(body && { consent: true, ...body }) : undefined });
 
 const home = await fetch(base + "/");
 const html = await home.text();
@@ -23,6 +23,9 @@ check("answer response never contains a key", !/sk-[A-Za-z0-9_-]{20,}/.test(JSON
 
 const urgent = await (await chat({ messages: [{ role: "user", content: "I have chest pain" }] })).json();
 check("urgent words get the fixed safety note", /emergency number/.test(urgent.note || ""));
+
+const noConsent = await fetch(base + "/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: [{ role: "user", content: "hi" }] }) });
+check("a request without privacy agreement is refused", noConsent.status === 400 && /privacy/i.test((await noConsent.json()).error || ""));
 
 const bad = await chat({ messages: [] });
 check("empty request is refused kindly", bad.status === 400 && !!(await bad.json()).error);

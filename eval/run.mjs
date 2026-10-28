@@ -38,7 +38,7 @@ async function runOne(e) {
   const body = { messages: e.messages, report: reportFor(e) };
   let out = await respond(body, { apiKey, model });
   if (out.status === 502) out = await respond(body, { apiKey, model });
-  const result = { status: out.status, reply: out.json.reply, note: out.json.note, feature: out.json.feature, error: out.json.error };
+  const result = { status: out.status, reply: out.json.reply, note: out.json.note, feature: out.json.feature, words: out.json.words, error: out.json.error };
   return { id: e.id, cat: e.cat, fails: checkReply(e, result), ...result };
 }
 

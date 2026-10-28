@@ -1,3 +1,5 @@
+import { TERM_DEFS } from "../assistant/glossary.mjs";
+
 // Rule-based checks for assistant replies. These test the things that can be tested
 // with rules: style, safety, and whether the reply stays honest. They do not judge
 // whether the medical content is right. A person still has to read the replies.
@@ -29,6 +31,10 @@ function questionsToPerson(text) {
     .map((l) => l.replace(/["“][^"”]*["”]/g, "")).join(" ").match(/\?/g)?.length || 0;
 }
 
+// Medical words a reply must explain in plain words if it uses them. The person sees the reply together
+// with the "Words in this answer" box, so both count. The word list lives in assistant/glossary.mjs.
+const TERM_CUES = TERM_DEFS.map((d) => [d.name, d.re, d.cue]);
+
 const RULES = {
   short: (r) => (words(r.reply) <= 220 ? null : `too long (${words(r.reply)} words)`),
   one_question: (r) => (questionsToPerson(r.reply) <= 1 ? null : "asked the person more than one question"),
@@ -51,6 +57,13 @@ export function checkReply(entry, result) {
   if (result.status !== 200 || !result.reply) return [`no answer (status ${result.status}${result.error ? ": " + result.error : ""})`];
   const reply = result.reply;
   for (const [re, why] of NEVER) if (saidIt(re, reply)) fails.push(why);
+  const wordsText = (result.words || []).map((w) => w.term + " " + w.def).join(" ");
+  // Applies to every single-turn conversation. Later turns may rely on an earlier explanation.
+  if ((entry.messages || []).length === 1) {
+    for (const [name, term, cue] of TERM_CUES) {
+      if (term.test(reply) && !cue.test(reply + " " + wordsText)) fails.push(`explains_terms: used "${name}" without saying what it means`);
+    }
+  }
   for (const rule of entry.expect || []) {
     if (!RULES[rule]) { fails.push(`unknown rule ${rule}`); continue; }
     const bad = RULES[rule](result);

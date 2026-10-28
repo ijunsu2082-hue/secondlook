@@ -2,6 +2,7 @@
 // The chat panel (chat.js) receives the parsed result as context.
 import { initChat, setReportContext, ask } from "./chat.js";
 import { BIRADS, DENSITY, TERMS, QUESTIONS, EXAMPLES, SOURCES } from "./knowledge.js";
+import { checkReport, describeBirads, LEVELS } from "./sanity.js";
 
 const $ = (s) => document.querySelector(s);
 export const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -27,21 +28,31 @@ export function parseReport(text) {
   }
 
   // Locations: sentence by sentence so side, clock, distance and size belong together.
+  // Every valid clock mention in a sentence becomes its own finding. Positions that are not 1 to 12 are
+  // not matched here on purpose. sanity.js reports them so they are never dropped without a word.
   const findings = [];
   for (const sentence of text.split(/(?<=[.!?])\s+|\n+/)) {
-    const clock = sentence.match(/\b(1[0-2]|[1-9])(?::(00|30))?\s*o['’]?\s*clock\b/i);
-    if (!clock) continue;
-    const side = (sentence.match(/\b(right|left)\b/i) || [])[1];
-    const dist = sentence.match(/(\d+(?:\.\d+)?)\s*cm\s*(?:from (?:the )?nipple|FN)\b/i);
-    const size = sentence.match(/measur\w*\s+(\d+(?:\.\d+)?(?:\s*x\s*\d+(?:\.\d+)?){0,2})\s*(cm|mm)\b/i);
-    const hour = +clock[1] + (clock[2] === "30" ? 0.5 : 0);
-    let sizeCm = null;
-    if (size) {
-      const dims = size[1].split(/\s*x\s*/).map(Number);
-      sizeCm = Math.max(...dims) / (size[2].toLowerCase() === "mm" ? 10 : 1);
-    }
-    findings.push({ side: side ? side.toLowerCase() : null, hour, clockText: clock[0],
-      distCm: dist ? +dist[1] : null, sizeCm, sentence: sentence.trim() });
+    const clocks = [...sentence.matchAll(/\b(1[0-2]|[1-9])(?::(00|30))?\s*o['’]?\s*clock\b/gi)];
+    clocks.forEach((clock, i) => {
+      const multi = clocks.length > 1;
+      // One clock in the sentence: look at the whole sentence. Several: only the words around this one.
+      const after = multi
+        ? sentence.slice(clock.index + clock[0].length, i + 1 < clocks.length ? clocks[i + 1].index : sentence.length)
+        : sentence;
+      const sideWords = [...sentence.slice(0, clock.index).matchAll(/\b(right|left)\b/gi)];
+      const firstSide = (sentence.match(/\b(right|left)\b/i) || [])[1];
+      const side = multi ? (sideWords.length ? sideWords[sideWords.length - 1][1] : firstSide) : firstSide;
+      const dist = after.match(/(\d+(?:\.\d+)?)\s*cm\s*(?:from (?:the )?nipple|FN)\b/i);
+      const size = after.match(/measur\w*\s+(\d+(?:\.\d+)?(?:\s*x\s*\d+(?:\.\d+)?){0,2})\s*(cm|mm)\b/i);
+      const hour = +clock[1] + (clock[2] === "30" ? 0.5 : 0);
+      let sizeCm = null;
+      if (size) {
+        const dims = size[1].split(/\s*x\s*/).map(Number);
+        sizeCm = Math.max(...dims) / (size[2].toLowerCase() === "mm" ? 10 : 1);
+      }
+      findings.push({ side: side ? side.toLowerCase() : null, hour, clockText: clock[0],
+        distCm: dist ? +dist[1] : null, sizeCm, sentence: sentence.trim() });
+    });
   }
   return { birads, density, findings, terms: findTerms(text) };
 }
@@ -80,14 +91,54 @@ function scaleSvg(key) {
     </div>`;
 }
 
-function biradsCard(key) {
+// The extra check never breaks the decoder. If it fails, say so instead of showing nothing.
+function safeCheck(text) {
+  try {
+    return checkReport(text);
+  } catch {
+    return {
+      warnings: [{ id: "check-failed", level: "unreadable", label: LEVELS.unreadable, title: "We could not finish checking this report",
+        detail: "The extra check that looks for typing mistakes and parts that do not match did not finish. The explanation below was still made, but please read the original report carefully.",
+        question: "Can you read my report with me and confirm that all the numbers and words are right?", evidence: [], spans: [] }],
+      notes: [], facts: { birads: [], clock: [], measurements: [], family: { stated: false } }, hasIssues: true,
+    };
+  }
+}
+
+// BI-RADS numbers that only look like they come from an earlier exam are not "current" for this report.
+function currentBirads(r, check) {
+  const facts = (check && check.facts && check.facts.birads) || [];
+  return r.birads.filter((k) => {
+    const m = facts.filter((b) => b.category === k);
+    return !m.length || m.some((b) => b.current);
+  });
+}
+
+// Questions for the doctor. Questions that came from a warning come first. The family history question is
+// neutral unless the report itself states a family history.
+export function buildQuestions(r, check) {
+  const qs = [];
+  for (const w of (check && check.warnings) || []) if (w.question) qs.push(w.question);
+  for (const k of currentBirads(r, check)) qs.push(...(QUESTIONS[k[0]] || []));
+  if (r.density === "C" || r.density === "D") qs.push(...QUESTIONS.dense);
+  const stated = !!(check && check.facts && check.facts.family && check.facts.family.stated);
+  qs.push(...(stated ? QUESTIONS.familyStated : QUESTIONS.family), "Can I have a copy of the full report and the images?");
+  return [...new Set(qs)];
+}
+
+function biradsCard(key, tag) {
   const b = BIRADS[key];
+  const earlier = tag === "earlier";
+  const tagHtml = tag === "earlier" ? `<span class="birads-tag">Looks like an earlier exam</span>`
+    : tag === "several" ? `<span class="birads-tag">One of several numbers in this report</span>` : "";
   return `<div class="birads tone-${b.tone}">
+    ${tagHtml}
     <div class="cat"><span class="num">${key}</span><div><div class="muted" style="font-size:13px">BI-RADS number</div><b style="font-size:19px">${esc(b.name)}</b></div></div>
+    <p class="fine" style="margin:8px 0 0">BI-RADS is a score from 0 to 6 that radiologists (the doctors who read breast pictures) use to sum up what they saw and what should happen next.</p>
     ${scaleSvg(key)}
     <dl class="kv">
       <dt>How often this turns out to be cancer</dt><dd>${esc(b.risk)}</dd>
-      <dt>What usually happens next</dt><dd>${esc(b.next)}</dd>
+      <dt>What usually happens next</dt><dd>${earlier ? "This number looks like it is from an earlier exam, so these next steps may not apply now. " : ""}${esc(b.next)}</dd>
       <dt>In plain words</dt><dd>${esc(b.plain)}</dd>
     </dl>
     ${b.note ? `<p class="fine">${esc(b.note)}</p>` : ""}
@@ -141,29 +192,98 @@ function breastSvg(side, findings) {
   </svg>`;
 }
 
-function locationCard(findings) {
+// Clock positions the diagram cannot use (not 1 to 12, or an odd format). They are listed, never dropped quietly.
+function unplacedClocks(check) {
+  const seen = new Set();
+  const out = [];
+  for (const c of (check && check.facts && check.facts.clock) || []) {
+    if (c.valid) continue;
+    const key = c.raw.toLowerCase();
+    if (!seen.has(key)) { seen.add(key); out.push(c.raw); }
+  }
+  return out;
+}
+
+function locationCard(findings, check) {
   const bySide = { right: findings.filter((f) => f.side === "right"), left: findings.filter((f) => f.side === "left") };
-  const rows = findings.map((f) => `<li><b>${f.side ? f.side[0].toUpperCase() + f.side.slice(1) + " breast" : "Breast"}, ${esc(f.clockText)}</b>${f.distCm != null ? `, ${f.distCm} cm from the nipple` : ""}${f.sizeCm ? `, about ${f.sizeCm} cm across (${(f.sizeCm * 10).toFixed(0)} mm)` : ""}</li>`).join("");
-  return `<div class="card"><h3>Where is the finding?</h3>
-    <div class="diagram">
+  const rows = findings.map((f) => `<li><b>${f.side ? f.side[0].toUpperCase() + f.side.slice(1) + " breast" : "Breast"}, ${esc(f.clockText)}</b>${f.distCm != null ? `, ${f.distCm} cm from the nipple` : ""}${f.sizeCm ? `, about ${f.sizeCm} cm across (${(f.sizeCm * 10).toFixed(0)} mm)` : ""}${f.sizeCm >= 10 ? ' <span class="flag-chip">Check this size</span>' : ""}</li>`).join("");
+  const unplaced = unplacedClocks(check);
+  const unplacedHtml = unplaced.length
+    ? `<div class="unplaced"><b>Positions we could not place</b>
+        <p>These are not drawn on the diagram. Breast positions are described like the numbers on a clock, from 1 to 12, and these do not fit. They may be a typing or copy mistake. Your doctor may also have written them on purpose. Please check the original report.</p>
+        <ul>${unplaced.map((raw) => `<li><code>${esc(raw)}</code></li>`).join("")}</ul></div>`
+    : "";
+  const diagrams = findings.length
+    ? `<div class="diagram">
       <figure>${breastSvg("right", bySide.right)}<figcaption>Your <b>right</b> breast</figcaption></figure>
       <figure>${breastSvg("left", bySide.left)}<figcaption>Your <b>left</b> breast</figcaption></figure>
     </div>
     <ul>${rows}</ul>
     <p class="fine">This is drawn the way radiologists describe positions, as if you are facing your doctor. 12 o’clock points toward your head.
-      The spots are only a rough guide.</p></div>`;
+      The spots are only a rough guide.</p>`
+    : "";
+  return `<div class="card"><h3>Where is the finding?</h3>${diagrams}${unplacedHtml}</div>`;
 }
 
-function annotate(text, hits) {
-  let html = "", last = 0;
+// Warning area shown first when the text has a value that looks wrong or parts that do not seem to match.
+function sanityCard(check) {
+  const items = check.warnings.map((w) => `<li>
+      <span class="lvl lvl-${esc(w.level)}">${esc(w.label || LEVELS[w.level] || "Needs checking")}</span>
+      <b>${esc(w.title)}</b>
+      <p>${esc(w.detail)}</p>
+      ${(w.evidence || []).map((e) => `<q>${esc(e)}</q>`).join(" ")}
+    </li>`).join("");
+  const n = check.warnings.length;
+  return `<section class="sanity" role="region" aria-labelledby="sanity-h" tabindex="-1">
+    <h3 id="sanity-h" tabindex="-1"><span class="sanity-icon" aria-hidden="true">!</span>Please double check this report</h3>
+    <p>Some parts of this report do not seem to match, or have a value that looks unusual. This can happen when text is copied incorrectly. Please check the original report, or ask your imaging team to explain it, before relying on this summary.</p>
+    <p>Your doctor may really have written it that way, so we are not saying it is wrong. We just cannot tell. If something looks impossible, check your copy and paste first. Then ask your imaging team to confirm that the report says what it should. We kept everything and explained it below.</p>
+    <p><b>${n} ${n === 1 ? "thing" : "things"} to check:</b> look for the CHECK tags in your report text further down.</p>
+    <ul>${items}</ul>
+    <p class="fine">These labels are about the text, not your health. A warning does not mean you have cancer, and a report without warnings is not proof that everything in it is right.</p>
+  </section>`;
+}
+
+// Calm information lines. They are not warnings, so they carry no level badge.
+function notesHtml(check) {
+  return (check.notes || []).map((n) => `<div class="note-info"><b>${esc(n.title)}</b><p>${esc(n.detail)}</p></div>`).join("");
+}
+
+// Splits the text at the flagged stretches. Words explained by the glossary stay highlighted inside and outside the flags.
+function mergeFlags(flags, len) {
+  const sorted = flags.map((f) => ({ start: Math.max(0, f.start), end: Math.min(len, f.end), titles: [f.title] }))
+    .filter((f) => f.end > f.start).sort((a, b) => a.start - b.start);
+  const out = [];
+  for (const f of sorted) {
+    const last = out[out.length - 1];
+    if (last && f.start <= last.end) { last.end = Math.max(last.end, f.end); last.titles.push(...f.titles); }
+    else out.push({ ...f });
+  }
+  return out;
+}
+
+function annotateTerms(text, hits, from, to) {
+  let html = "", last = from;
   for (const h of hits) {
-    if (h.start < last) continue;
+    if (h.start < last || h.end > to) continue; // before this piece, or crossing its edge
     html += esc(text.slice(last, h.start));
     const cls = h.negated ? "t-info" : "t-" + h.tone;
     html += `<mark class="term ${cls}" tabindex="0" data-term="${esc(h.term)}" data-neg="${h.negated ? 1 : 0}"${h.negated ? ' style="text-decoration:line-through;text-decoration-color:var(--muted)"' : ""}>${esc(text.slice(h.start, h.end))}</mark>`;
     last = h.end;
   }
-  return html + esc(text.slice(last));
+  return html + esc(text.slice(last, to));
+}
+
+function annotate(text, hits, flags = []) {
+  const merged = mergeFlags(flags, text.length);
+  let html = "", pos = 0;
+  for (const f of merged) {
+    html += annotateTerms(text, hits, pos, f.start);
+    const title = [...new Set(f.titles)].join(" | ");
+    html += `<mark class="flag" title="${esc(title)}">${annotateTerms(text, hits, f.start, f.end)}</mark>`;
+    pos = f.end;
+  }
+  return html + annotateTerms(text, hits, pos, text.length);
 }
 
 export function renderReport(text) {
@@ -174,51 +294,69 @@ export function renderReport(text) {
     return;
   }
   const r = parseReport(text);
+  const check = safeCheck(text);
   setReportContext({ text, parsed: r });
   const parts = [];
 
-  // Summary sentence.
-  const worst = [...r.birads].sort((a, b) => order(b) - order(a))[0];
+  // Anything that looks wrong or does not match comes first, before anyone relies on the summary.
+  if (check.hasIssues) parts.push(sanityCard(check));
+
+  // Summary sentence. When the report gives several numbers we never pick one for the reader.
+  const d = describeBirads(check);
+  const current = currentBirads(r, check);
+  const worst = [...current].sort((a, b) => order(b) - order(a))[0];
   let summary = "";
-  if (worst) summary += `Your report gives a <b>BI-RADS ${worst}</b> (“${esc(BIRADS[worst].name)}”). What usually happens next: ${esc(BIRADS[worst].next)} `;
+  if (d.sentence) {
+    summary += esc(d.sentence) + " ";
+    if (!d.ambiguous && current.length === 1 && worst) summary += `What usually happens next: ${esc(BIRADS[worst].next)} `;
+  } else if (worst) summary += `Your report gives a <b>BI-RADS ${worst}</b> (“${esc(BIRADS[worst].name)}”). What usually happens next: ${esc(BIRADS[worst].next)} `;
   else summary += "I could not find a BI-RADS number in this text. If this is a biopsy report, look at the words explained below and ask your doctor what they mean for you. ";
   if (r.findings.length) summary += `It describes ${r.findings.length === 1 ? "one finding" : r.findings.length + " findings"}. You can see where below. `;
   summary += `<br><span class="fine">Only your doctor can tell you what this means for you. Have a question? Ask in the chat under the report. If you notice any change in your breasts, see <a href="#check" data-tab="check">When to see a doctor</a>.</span>`;
   parts.push(`<div class="card"><h3>The short version</h3><p style="margin:0">${summary}</p></div>`);
+  const notes = notesHtml(check);
+  if (notes) parts.push(notes);
 
-  for (const k of r.birads.sort((a, b) => order(b) - order(a))) parts.push(biradsCard(k));
+  // One card for every BI-RADS number found, so nothing is hidden when they disagree.
+  const factsBirads = (check.facts && check.facts.birads) || [];
+  for (const k of r.birads.sort((a, b) => order(b) - order(a))) {
+    const m = factsBirads.filter((b) => b.category === k);
+    const tag = m.length && m.every((b) => b.historical && !b.current) ? "earlier" : d.ambiguous && current.length > 1 ? "several" : "";
+    parts.push(biradsCard(k, tag));
+  }
   if (r.density) parts.push(densityCard(r.density));
-  if (r.findings.length) parts.push(locationCard(r.findings));
+  if (r.findings.length || unplacedClocks(check).length) parts.push(locationCard(r.findings, check));
 
   // Annotated report + glossary of words found.
   const seen = new Map();
   // A word counts as "absent" only if every mention of it is negated.
   for (const h of r.terms) if (!seen.has(h.term) || (seen.get(h.term).negated && !h.negated)) seen.set(h.term, h);
   const legend = Object.entries(TONE_LABEL).map(([t, l]) => `<span><i style="background:var(--${t})"></i>${l}</span>`).join("");
-  parts.push(`<div class="card"><h3>Your report with the words explained</h3><div class="legend">${legend}<span><s>crossed out</s> = your report says it was not seen</span></div>
-    <div class="annotated" style="margin-top:10px">${annotate(text, r.terms)}</div></div>`);
+  const flags = check.warnings.flatMap((w) => (w.spans || []).map((s) => ({ start: s.start, end: s.end, title: `${w.label || LEVELS[w.level]}: ${w.title}` })));
+  const flagLegend = flags.length ? `<span><mark class="flag">like this</mark> = please check this part</span>` : "";
+  parts.push(`<div class="card"><h3>Your report with the words explained</h3><div class="legend">${legend}<span><s>crossed out</s> = your report says it was not seen</span>${flagLegend}</div>
+    <div class="annotated" style="margin-top:10px">${annotate(text, r.terms, flags)}</div></div>`);
   if (seen.size) {
     parts.push(`<div class="card"><h3>Words from your report (${seen.size})</h3><div class="terms">${[...seen.values()].map((h) =>
       `<div class="term-row"><div><b>${esc(h.term)}</b>${h.negated ? '<span class="pill info">not seen</span>' : `<span class="pill ${h.tone}">${TONE_LABEL[h.tone]}</span>`}</div><div>${esc(h.def)}${h.negated ? " <i>Your report says this was not seen.</i>" : ""}</div></div>`).join("")}</div></div>`);
   }
 
   // Questions to ask.
-  const qs = [];
-  for (const k of r.birads) qs.push(...(QUESTIONS[k[0]] || []));
-  if (r.density === "C" || r.density === "D") qs.push(...QUESTIONS.dense);
-  qs.push(...QUESTIONS.family, "Can I have a copy of the full report and the images?");
-  parts.push(`<div class="card"><h3>Questions to bring to your appointment</h3><ol class="questions">${[...new Set(qs)].map((q) => `<li>${esc(q)}</li>`).join("")}</ol>
+  const qs = buildQuestions(r, check);
+  parts.push(`<div class="card"><h3>Questions to bring to your appointment</h3><ol class="questions">${qs.map((q) => `<li>${esc(q)}</li>`).join("")}</ol>
     <div class="row"><button class="btn small" id="copy-questions">Copy these questions</button>
     <button class="btn small" id="tailor-questions">Ask the assistant to tailor these</button></div></div>`);
   parts.push(`<p class="src">Where the BI-RADS meanings and percentages come from: <a href="${SOURCES.acr.url}" target="_blank" rel="noopener">${esc(SOURCES.acr.label)}</a>;
     <a href="${SOURCES.acsBirads.url}" target="_blank" rel="noopener">${esc(SOURCES.acsBirads.label)}</a>. What your radiologist and doctor tell you always comes first.</p>`);
 
   out.innerHTML = parts.join("");
+  // Meet the warning first: keyboard and screen reader users land on it. No warning means focus stays where it was.
+  if (check.hasIssues) $("#sanity-h")?.focus();
   $("#tailor-questions")?.addEventListener("click", () => ask("Help me write questions to ask at my appointment."));
   const btn = $("#copy-questions");
   btn?.addEventListener("click", async () => {
     try {
-      await navigator.clipboard.writeText([...new Set(qs)].map((q, i) => `${i + 1}. ${q}`).join("\n"));
+      await navigator.clipboard.writeText(qs.map((q, i) => `${i + 1}. ${q}`).join("\n"));
       btn.textContent = "Copied";
     } catch {
       btn.textContent = "Could not copy. Please select the text and copy it yourself.";
@@ -247,11 +385,13 @@ export function initReport() {
 
   // Term popovers (hover, focus or tap).
   const pop = $("#popover");
+  let shownAt = 0;
   const show = (el) => {
     const info = TERM_INDEX.get(el.dataset.term.toLowerCase());
     if (!info) return;
     pop.innerHTML = `<b>${esc(info.term)}</b>${el.dataset.neg === "1" ? "<i>Your report says this was not seen.</i> " : ""}${esc(info.def)}`;
     pop.hidden = false;
+    shownAt = Date.now();
     const r = el.getBoundingClientRect();
     const w = Math.min(320, window.innerWidth - 24);
     pop.style.left = Math.max(12, Math.min(r.left, window.innerWidth - w - 12)) + "px";
@@ -263,6 +403,7 @@ export function initReport() {
   out.addEventListener("click", (e) => e.target.matches("mark.term") && show(e.target));
   out.addEventListener("mouseout", (e) => e.target.matches("mark.term") && (pop.hidden = true));
   out.addEventListener("focusout", () => (pop.hidden = true));
-  window.addEventListener("scroll", () => (pop.hidden = true), { passive: true });
+  // Hide on scroll, but not for the scroll that focusing a word causes (that would hide it from keyboard users).
+  window.addEventListener("scroll", () => { if (Date.now() - shownAt > 400) pop.hidden = true; }, { passive: true });
   document.addEventListener("keydown", (e) => e.key === "Escape" && (pop.hidden = true));
 }

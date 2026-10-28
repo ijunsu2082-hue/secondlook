@@ -1,5 +1,6 @@
 // Conversation panel under the report decoder. It sends the decoded report as
 // context to /api/chat (a server function that holds the API key).
+// Nothing is sent until the person has read the privacy box and agreed.
 const $ = (s) => document.querySelector(s);
 
 const GENERAL_PROMPTS = [
@@ -20,11 +21,8 @@ let report = null;          // { text, parsed } from the decoder, or null
 let messages = [];          // what the server sees: { role, content }
 let busy = false;
 let lastUser = null;
-
-export function ask(text) {
-  $("#chat")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  return send(text);
-}
+let consented = false;      // lasts for this page visit only, so a reload asks again
+const explained = new Set(); // medical words whose meaning we have already shown, so we do not repeat them
 
 export function setReportContext(ctx) {
   report = ctx && ctx.text && ctx.text.trim() ? ctx : null;
@@ -39,6 +37,9 @@ function renderContext() {
   el.textContent = report
     ? "I can see the report you explained above." + b + " I will use it when I answer."
     : "You have not explained a report yet. I can still answer general questions. For answers about your own report, explain it above first.";
+  $("#gate-report").textContent = report
+    ? `The report you explained above (${report.text.length.toLocaleString()} characters) will be sent along with your questions.`
+    : "No report text will be sent unless you explain a report above first.";
 }
 
 function renderSuggestions() {
@@ -99,6 +100,27 @@ function note(parent, text) {
   parent.prepend(n);
 }
 
+// "Words in this answer": fixed definitions the server adds for medical words the reply did not explain.
+function wordsBox(parent, words) {
+  const fresh = (words || []).filter((w) => !explained.has(w.term));
+  if (!fresh.length) return;
+  const box = document.createElement("div");
+  box.className = "msg-words";
+  const title = document.createElement("b");
+  title.textContent = "Words in this answer";
+  const dl = document.createElement("dl");
+  for (const w of fresh) {
+    explained.add(w.term);
+    const dt = document.createElement("dt");
+    dt.textContent = w.term;
+    const dd = document.createElement("dd");
+    dd.textContent = w.def;
+    dl.append(dt, dd);
+  }
+  box.append(title, dl);
+  parent.append(box);
+}
+
 function featureChip(parent, feature) {
   const f = FEATURE_LINKS[feature];
   if (!f) return;
@@ -110,9 +132,23 @@ function featureChip(parent, feature) {
   parent.append(a);
 }
 
+// Other parts of the page call this (for example "Ask the assistant to tailor these").
+// If the person has not agreed yet, take them to the privacy box instead of sending anything.
+export function ask(text) {
+  $("#chat")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (!consented) {
+    const gate = $("#chat-gate");
+    gate.classList.add("flash");
+    setTimeout(() => gate.classList.remove("flash"), 1600);
+    $("#gate-accept").focus({ preventScroll: true });
+    return Promise.resolve();
+  }
+  return send(text);
+}
+
 async function send(text) {
   text = (text || "").trim();
-  if (!text || busy) return;
+  if (!text || busy || !consented) return;
   busy = true;
   lastUser = text;
   setBusy(true);
@@ -125,7 +161,7 @@ async function send(text) {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: messages.slice(-MAX_SENT), report: report && { text: report.text, parsed: summarize(report.parsed) } }),
+      body: JSON.stringify({ consent: true, known: [...explained], messages: messages.slice(-MAX_SENT), report: report && { text: report.text, parsed: summarize(report.parsed) } }),
     });
     let data = null;
     try { data = await res.json(); } catch { /* not JSON */ }
@@ -134,6 +170,7 @@ async function send(text) {
       messages.push({ role: "assistant", content: data.reply });
       const b = bubble("assistant", data.reply);
       if (data.note) note(b, data.note);
+      wordsBox(b, data.words);
       if (data.feature) featureChip(b, data.feature);
     } else {
       messages.pop();
@@ -181,6 +218,12 @@ function summarize(p) {
 export function initChat() {
   renderContext();
   renderSuggestions();
+  $("#gate-accept").addEventListener("click", () => {
+    consented = true;
+    $("#chat-gate").hidden = true;
+    $("#chat-main").hidden = false;
+    $("#chat-input").focus({ preventScroll: true });
+  });
   $("#chat-form").addEventListener("submit", (e) => {
     e.preventDefault();
     const v = $("#chat-input").value;
