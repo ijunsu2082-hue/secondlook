@@ -71,7 +71,7 @@ node tests/audit.mjs   # keyboard-only pass, every button and link, layout check
 node tests/live-check.mjs [url]   # smoke test of a running copy (local or deployed)
 ```
 
-See [docs/TEST_PLAN.md](docs/TEST_PLAN.md) for what has and has not been tested, and [docs/PROGRESS.md](docs/PROGRESS.md) for project status.
+See [docs/TEST_PLAN.md](docs/TEST_PLAN.md) for test coverage and known gaps, and [eval/results.md](eval/results.md) for the recorded assistant evaluation.
 
 ## Ultrasound model results
 
@@ -102,7 +102,7 @@ python train_wdbc.py --out ../app
 python train_busi.py --data /path/to/Dataset_BUSI_with_GT --out ../app --compare
 ```
 
-BUSI is on Hugging Face as `gymprathap/Breast-Cancer-Ultrasound-Images-Dataset` (CC BY 4.0). We have not re-run this training in the latest session.
+BUSI is on Hugging Face as `gymprathap/Breast-Cancer-Ultrasound-Images-Dataset` (CC BY 4.0). Reported results come from the saved training artifacts in `training/results/`.
 
 ## Folders
 
@@ -113,7 +113,7 @@ netlify/        the chat function
 eval/           135 test conversations and the runner
 tests/          unit tests and the browser test
 training/       Python code that trained the small models
-docs/           test plan and progress tracker
+docs/           testing and deployment documentation
 ```
 
 ## Credits and licenses
@@ -127,15 +127,11 @@ docs/           test plan and progress tracker
 - **PDF.js (reads text out of PDFs):** Apache-2.0. Files are in app/vendor/pdf.
 - **Chat model:** OpenAI, used through its API under its terms.
 
-## Background notes
-
-[RESEARCH.md](RESEARCH.md) holds early research notes from the team. They are not part of the app, and the numbers in them were not re-checked in the final audit. [MODEL_CARD.md](MODEL_CARD.md) is the source of truth for the ultrasound model.
-
 ## Limits
 
 - This is a learning tool, not a medical device. Please never use it to see a doctor later than you would have.
 - The ultrasound model has only seen images from one hospital. It misses about 1 in 4 cancers in our test.
 - The report explainer handles common U.S. wording and can miss unusual wording.
 - The sanity check is a set of fixed rules. It will miss some problems, and its warnings are not a diagnosis.
-- We have not verified a Netlify deploy ourselves. The owner must rotate the OpenAI key before deploying.
+- Deployment checks are described in [docs/DEPLOY.md](docs/DEPLOY.md). A successful local test does not verify the deployed site.
 - The chat can be wrong. No clinician has reviewed this project yet.
