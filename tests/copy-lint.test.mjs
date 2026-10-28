@@ -27,7 +27,7 @@ for (const f of FILES) {
   test(`${f}: no hard jargon in visible text`, () => { for (const r of JARGON) assert.ok(!r.test(txt), String(r)); });
 }
 
-for (const f of ["README.md", "SUBMISSION.md", "MODEL_CARD.md", "RESEARCH.md", "docs/DEPLOY.md", "docs/RUBRIC.md", "docs/TEST_PLAN.md", "docs/PROGRESS.md"]) {
+for (const f of ["README.md", "MODEL_CARD.md", "docs/DEPLOY.md", "docs/TEST_PLAN.md"]) {
   test(`${f}: no em or en dashes and no buzzwords`, () => {
     const txt = read(f);
     assert.deepEqual(txt.match(/[—–]/g), null);

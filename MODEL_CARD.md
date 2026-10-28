@@ -83,7 +83,7 @@ The three backbones scored within one spread of each other (AUC 0.904, 0.888 and
 
 ## Not done yet
 
-- We did not re-run the BUSI training in this session. The numbers above are the ones already stored in the repository.
+- The reported training results are stored in `training/results/`; they are not independently reproduced results.
 - No outside test set (for example BUS-BRA or BrEaST) has been run.
 - No clinician has reviewed the app or its wording. This applies to the whole project, including the report explainer, the symptom rules and the chat assistant.
 

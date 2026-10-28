@@ -5,7 +5,7 @@ Status values: **Run** means we ran it and the result is recorded. **Not run** m
 | Area | What we check | How | Status | Result |
 |---|---|---|---|---|
 | Report explainer | BI-RADS, density, clock position, size, "not seen" words | `tests/decoder.test.mjs` | Run | Passing |
-| Main journey | Open report sample, explain it, ask the chat, get a reply, clear chat, try again after an error | Browser script (`tests/e2e.mjs`), desktop 1280 wide and phone 390 wide | Run | Passing, see PROGRESS.md |
+| Main journey | Open report sample, explain it, ask the chat, get a reply, clear chat, try again after an error | Browser script (`tests/e2e.mjs`), desktop 1280 wide and phone 390 wide | Run | Prior run: 95 of 97 checks. Two checks flagged console errors from an intentionally injected HTTP 502 response. |
 | Every tab and key button | Tabs, samples, upload, symptom box, lab case | Same browser script | Run | Passing |
 | Upload safety | Text file, over 15 MB file, broken image, real image | Same browser script | Run | Passing |
 | Chat server code | Input limits, urgent words, fake OpenAI failures, empty answers, rate limit, reply guard | `tests/chat.test.mjs` (no real API calls) | Run | Passing |
@@ -16,7 +16,7 @@ Status values: **Run** means we ran it and the result is recorded. **Not run** m
 | Model results | Numbers in the app match the stored metrics file | Read from `busi_model.json` at run time | Run (by design) | |
 | Model on new data | Outside ultrasound set | BUS-BRA or BrEaST | Not run | |
 | Browser model matches Python | Probabilities on the 6 samples within 0.02 | Needs a script in the browser | Not run | |
-| Accessibility basics | Keyboard use, labels, focus order, contrast | Manual pass | Partly run | The upload box is now reachable by keyboard. Skip link, tab roles and focus after tab change are not done. Contrast not measured. |
+| Accessibility basics | Keyboard use, labels, focus order, contrast | Manual pass | Partly run | Upload keyboard access, skip link, tab roles and focus after tab change are implemented. A complete manual pass and contrast measurements are still pending. |
 | Screen reader | NVDA or VoiceOver pass | Manual | Not run | |
 | Reliability | Chat fails kindly when the server is down, when the key is missing, and on a static host | Unit tests and one browser test with a fake 502 | Partly run | Not tested on the real Netlify deployment yet. |
 | Privacy | Key never in the repo or the browser code | `git grep` for the key pattern, read `app/js/chat.js` | Run | No key found in tracked files |

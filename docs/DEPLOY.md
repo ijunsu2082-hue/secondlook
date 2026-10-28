@@ -1,28 +1,31 @@
 # Deploying to Netlify
 
-This needs to be done by the site owner. It has not been done from this project.
+Netlify serves the static app and the server-side chat function. A static host such as GitHub Pages can serve the app, but cannot run the chat function.
 
-## Before you start
+## Configuration
 
-1. **Rotate the OpenAI key.** The old key was pasted into a chat session, so treat it as exposed. Create a new key in the OpenAI dashboard and delete the old one. Set a monthly spending limit on the new one.
-2. Make sure `.env` is not committed (`git status` should not list it).
+1. Create a Netlify site from this repository. `netlify.toml` sets the publish directory to `app` and the functions directory to `netlify/functions`.
+2. Set `OPENAI_API_KEY` in the site's environment variables. Keep it available only to server-side functions. Optionally set `OPENAI_MODEL`; the default is `gpt-4o-mini`.
+3. Deploy the site. Redeploy after changing environment variables.
 
-## Steps
+For local development, copy `.env.example` to `.env` and run `node dev-server.mjs`. Never commit `.env` or a real API key. Revoke and replace any key shared outside its intended environment before deploying.
 
-1. In Netlify, open the site (or create one from the GitHub repo). Netlify reads `netlify.toml`: it publishes the `app` folder and runs the functions in `netlify/functions`.
-2. Go to Site settings, then Environment variables. Add `OPENAI_API_KEY` with the new key. Mark it as secret if the option is shown. Optionally add `OPENAI_MODEL`.
-3. Deploy (or trigger a new deploy so the variable is picked up).
-4. Run the live smoke test:
+## Verify the deployment
 
-   ```bash
-   node tests/live-check.mjs https://your-site.netlify.app
-   ```
+Run the smoke test against the deployed URL:
 
-   It checks that the page and model load, that the chat answers, that urgent words get the safety note, that bad input is refused, and that no key text appears in the page, in `chat.js`, or in a reply.
-5. Open the site and click through the demo once (see SUBMISSION.md).
-6. Test a failed request on the live site: in Netlify, temporarily remove `OPENAI_API_KEY`, redeploy, and send a chat message. You should see "The assistant is not set up on this server yet" and no made-up answer. Put the key back and redeploy.
+```bash
+node tests/live-check.mjs https://your-site.netlify.app
+```
 
-## Notes
+It checks that the page and model load, that the chat answers, that urgent words get the safety note, that bad input is refused, and that no key text appears in the page, in `chat.js`, or in a reply. Chat checks require a configured API key and use API credit.
+
+Then open a built-in report sample, explain it, accept the chat privacy notice, and ask a follow-up question. Also check the ultrasound samples and the photo or PDF upload. Use fictional or anonymous reports.
+
+A successful local test does not verify the deployed site. Deployment must be checked at its own URL.
+
+## Operational limits
 
 - The rate limit lives in the function's memory, so it resets when Netlify restarts the function. It slows down casual misuse only.
+- Test the missing-key error on a local or preview instance without an API key. The chat should say it is not set up and show no generated answer.
 - On GitHub Pages the chat is not available. The page says so. Everything else works.

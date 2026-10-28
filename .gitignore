@@ -5,3 +5,15 @@ data/
 *.npz
 .netlify/
 .env
+.env.*
+!.env.example
+node_modules/
+.venv/
+# Local editor and assistant settings
+.idea/
+.vscode/
+.codex/
+.claude/
+.agents/
+# Private working notes
+/docs/private/
