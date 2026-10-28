@@ -27,6 +27,10 @@ Each part uses the tool that fits its job. We did not add AI where plain rules a
 | Warning signs and screening planner | Rules from published advice | Medical advice should be traceable to a source. |
 | Biopsy lab | A small model on cell measurements, with exact per-measurement contributions | A learning tool that shows how a model reaches its score. |
 
+## Photo and PDF upload
+
+You can upload a photo or a PDF of a report. A PDF that has real text is copied directly. A photo or scanned PDF is read with open-source text reading (Tesseract) running in your browser. The text is shown in the box so you can check it and fix mistakes. If the photo was hard to read, we do not explain it until you have checked the text. Limits: clear, straight-on photos work best. A blurry or tilted photo can give wrong numbers or missing words, which is why the text is shown for checking. Only English is supported, only the first 6 pages of a PDF are read, and files must be under 20 MB. We tested a clean picture, a text PDF, a scanned PDF and a blurry tilted photo. We have not tested real patient photos or handwriting.
+
 ## Report sanity check
 
 Some reports contain a typing or copy mistake, or two statements that do not fit together. SecondLook looks for these and shows a warning box above the decoded findings. Each warning says what we saw and what to ask your imaging team (the team that did the scan).
@@ -40,6 +44,7 @@ Limits: It uses fixed rules, so it can miss things. It cannot catch every contra
 ## What leaves your device
 
 - The report explainer, ultrasound demo, symptom check and biopsy lab run in your browser and send nothing out.
+- Uploading a photo or PDF of a report is read on your device too. The picture is never sent anywhere. The reading tools and English language file are served from our own site, so no outside site is contacted.
 - The chat sends your question and your report text to our server, which sends them to OpenAI. Our server does not store them. OpenAI may keep them for a short time under its own rules. The OpenAI key lives only on the server.
 - Please use made-up or anonymous text when demonstrating.
 
@@ -118,6 +123,8 @@ docs/           test plan and progress tracker
 - **Duplicate audit:** Pawłowska A et al. Data in Brief (2023).
 - **EfficientNet:** Tan M, Le Q (2019). Weights from the `timm` library, listed as Apache-2.0.
 - **ONNX Runtime Web:** MIT.
+- **Tesseract.js, Tesseract.js core and the English language data (reads text from photos):** Apache-2.0. Files are in app/vendor/ocr with their licenses.
+- **PDF.js (reads text out of PDFs):** Apache-2.0. Files are in app/vendor/pdf.
 - **Chat model:** OpenAI, used through its API under its terms.
 
 ## Background notes

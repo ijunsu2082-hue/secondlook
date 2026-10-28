@@ -377,7 +377,51 @@ export function initReport() {
     renderReport(ta.value);
   });
   $("#report-go").addEventListener("click", () => renderReport(ta.value));
+
+  // Photo or PDF upload: read on this device, show the text so it can be checked, then explain it.
+  const fileIn = $("#report-file"), fileStatus = $("#report-file-status"), drop = $("#report-drop");
+  const say = (msg, kind = "") => { fileStatus.hidden = !msg; fileStatus.textContent = msg; fileStatus.dataset.kind = kind; };
+  let reading = false;
+  async function readFile(file) {
+    if (!file || reading) return;
+    reading = true;
+    drop.setAttribute("aria-busy", "true");
+    say("Starting...");
+    try {
+      const { extractText } = await import("./ocr.js");
+      const r = await extractText(file, (m) => say(m));
+      if (!r.text || r.text.replace(/\s/g, "").length < 20) {
+        say("We could not find readable text in that file. Try a clearer, straight-on photo with good light, or paste the text instead.", "bad");
+        return;
+      }
+      ta.value = r.text;
+      const more = r.truncated ? " Only the first 6 pages were read." : "";
+      if (r.method === "pdf-text") say("We copied the text out of your PDF. Check that it matches your report, then read the explanation below." + more, "ok");
+      else {
+        const low = r.confidence !== null && r.confidence < 85;
+        say("We read this text from a picture. Reading pictures can make mistakes, such as a wrong number or a missing word. "
+          + (low ? "This picture was hard to read, so the text probably has mistakes. " : "")
+          + (low ? "We have not explained it yet. Fix anything that is wrong in the box, then press Explain this report." : "Compare it with your report and fix anything that is wrong, then press Explain this report again.") + more, low ? "bad" : "ok");
+        if (low) { ta.focus(); return; }
+      }
+      renderReport(ta.value);
+    } catch (err) {
+      say(err?.code === "big" ? "That file is too big. Please use a file under 20 MB."
+        : err?.code === "type" ? "Please choose a photo (JPG or PNG) or a PDF."
+        : "We could not read that file on this device. Please paste the text instead.", "bad");
+    } finally {
+      reading = false;
+      drop.removeAttribute("aria-busy");
+      fileIn.value = "";
+    }
+  }
+  fileIn.addEventListener("change", () => readFile(fileIn.files[0]));
+  ["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", (e) => readFile(e.dataTransfer?.files?.[0]));
+
   $("#report-clear").addEventListener("click", () => {
+    say("");
     ta.value = "";
     setReportContext(null);
     $("#report-out").innerHTML = `<div class="empty">Pick an example above, or paste a report, then press <b>Explain this report</b>.</div>`;

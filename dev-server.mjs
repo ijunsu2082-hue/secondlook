@@ -15,7 +15,7 @@ try {
 
 const { default: chat } = await import("./netlify/functions/chat.mjs");
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".css": "text/css", ".json": "application/json",
-  ".png": "image/png", ".svg": "image/svg+xml", ".wasm": "application/wasm" };
+  ".png": "image/png", ".svg": "image/svg+xml", ".wasm": "application/wasm", ".traineddata": "application/octet-stream" };
 const port = +process.env.PORT || 8000;
 
 http.createServer(async (req, res) => {

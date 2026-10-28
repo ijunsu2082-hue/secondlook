@@ -87,6 +87,10 @@ The three backbones scored within one spread of each other (AUC 0.904, 0.888 and
 - No outside test set (for example BUS-BRA or BrEaST) has been run.
 - No clinician has reviewed the app or its wording. This applies to the whole project, including the report explainer, the symptom rules and the chat assistant.
 
+## Reading photos and PDFs (existing open-source tools, nothing trained by us)
+
+The report tab can read a photo or PDF on your device using Tesseract.js (Apache-2.0, English only) and PDF.js (Apache-2.0). We did not train or change either one. Reading pictures can make mistakes, so the text is always shown for checking, and a low-confidence read is not explained until the person has checked it. We have not measured accuracy on real patient photos.
+
 ## Report Sanity Check (rules, no model)
 
 This part has no machine learning. `app/js/sanity.js` is a set of fixed rules that read the report text and flag things that look wrong. The same code runs in the browser and on the chat server.
