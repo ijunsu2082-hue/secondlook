@@ -1,0 +1,62 @@
+[
+ {
+  "file": "samples/normal_1.png",
+  "truth": "normal",
+  "source": "BUSI normal/normal (5).png",
+  "python_probs": [
+   0.8987,
+   0.0436,
+   0.0577
+  ]
+ },
+ {
+  "file": "samples/normal_2.png",
+  "truth": "normal",
+  "source": "BUSI normal/normal (61).png",
+  "python_probs": [
+   0.9708,
+   0.0223,
+   0.0069
+  ]
+ },
+ {
+  "file": "samples/benign_1.png",
+  "truth": "benign",
+  "source": "BUSI benign/benign (273).png",
+  "python_probs": [
+   0.1356,
+   0.6082,
+   0.2563
+  ]
+ },
+ {
+  "file": "samples/benign_2.png",
+  "truth": "benign",
+  "source": "BUSI benign/benign (103).png",
+  "python_probs": [
+   0.0012,
+   0.998,
+   0.0007
+  ]
+ },
+ {
+  "file": "samples/malignant_1.png",
+  "truth": "malignant",
+  "source": "BUSI malignant/malignant (154).png",
+  "python_probs": [
+   0.0,
+   0.0601,
+   0.9398
+  ]
+ },
+ {
+  "file": "samples/malignant_2.png",
+  "truth": "malignant",
+  "source": "BUSI malignant/malignant (40).png",
+  "python_probs": [
+   0.0872,
+   0.1634,
+   0.7495
+  ]
+ }
+]

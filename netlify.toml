@@ -1,0 +1,8 @@
+# Static site: no build step; publish the app/ folder as-is.
+[build]
+  publish = "app"
+
+[[headers]]
+  for = "/*.wasm"
+  [headers.values]
+    Content-Type = "application/wasm"

@@ -1,0 +1,40 @@
+Loaded 780 images: {'normal': 133, 'benign': 437, 'malignant': 210}
+Extracting EfficientNet-B0 features (original + mirrored)...
+    features 16/780
+    features 16/780
+  duplicate threshold 0.800: different-image pairs median -0.014; catches 5% of synthetic augmented copies (median self-similarity 0.535)
+Duplicate search: 65 hash pairs, 207 feature pairs -> 608 groups; 312 images have at least one near-duplicate
+Label conflicts: 9 groups (22 images) carry different labels -> removed. Examples: [['normal/normal (1).png', 'benign/benign (269).png'], ['normal/normal (129).png', 'normal/normal (35).png', 'benign/benign (32).png'], ['normal/normal (34).png', 'benign/benign (437).png'], ['benign/benign (131).png', 'benign/benign (42).png', 'malignant/malignant (51).png'], ['benign/benign (164).png', 'benign/benign (85).png', 'malignant/malignant (52).png']]
+Clean set: 758 images {'normal': 129, 'benign': 426, 'malignant': 203}
+
+EfficientNet-B0 linear probe, 5-fold grouped CV:
+  fold 1: train 610 test 148  acc 0.743  bal-acc 0.742  macro-AUC 0.896  malignant AUC 0.900  sens 0.816  spec 0.827
+  fold 2: train 607 test 151  acc 0.788  bal-acc 0.780  macro-AUC 0.915  malignant AUC 0.900  sens 0.674  spec 0.907
+  fold 3: train 608 test 150  acc 0.733  bal-acc 0.752  macro-AUC 0.906  malignant AUC 0.892  sens 0.641  spec 0.874
+  fold 4: train 602 test 156  acc 0.808  bal-acc 0.832  macro-AUC 0.942  malignant AUC 0.932  sens 0.850  spec 0.897
+  fold 5: train 605 test 153  acc 0.810  bal-acc 0.812  macro-AUC 0.926  malignant AUC 0.897  sens 0.767  spec 0.882
+  accuracy                 0.777 ± 0.032
+  balanced_accuracy        0.784 ± 0.034
+  macro_auc_ovr            0.917 ± 0.016
+  malignant_auc            0.904 ± 0.014
+  malignant_sensitivity    0.750 ± 0.080
+  malignant_specificity    0.877 ± 0.028
+  pooled malignant AUC 95% CI [0.8760958898164629, 0.9250265596731639]
+
+ConvNeXt-Tiny (ImageNet) linear probe:
+  fold 1: train 610 test 148  acc 0.730  bal-acc 0.732  macro-AUC 0.919  malignant AUC 0.882  sens 0.763  spec 0.809
+  fold 2: train 607 test 151  acc 0.801  bal-acc 0.797  macro-AUC 0.916  malignant AUC 0.910  sens 0.791  spec 0.935
+  fold 3: train 608 test 150  acc 0.747  bal-acc 0.740  macro-AUC 0.886  malignant AUC 0.865  sens 0.718  spec 0.892
+  fold 4: train 602 test 156  acc 0.769  bal-acc 0.801  macro-AUC 0.920  malignant AUC 0.908  sens 0.800  spec 0.836
+  fold 5: train 605 test 153  acc 0.784  bal-acc 0.806  macro-AUC 0.924  malignant AUC 0.876  sens 0.721  spec 0.827
+  accuracy 0.766  balanced_accuracy 0.775  macro_auc_ovr 0.913  malignant_auc 0.888  malignant_sensitivity 0.759  malignant_specificity 0.860
+
+DINOv2 ViT-S/14 (self-supervised) linear probe:
+  fold 1: train 610 test 148  acc 0.736  bal-acc 0.733  macro-AUC 0.912  malignant AUC 0.903  sens 0.789  spec 0.864
+  fold 2: train 607 test 151  acc 0.821  bal-acc 0.792  macro-AUC 0.927  malignant AUC 0.924  sens 0.744  spec 0.917
+  fold 3: train 608 test 150  acc 0.753  bal-acc 0.774  macro-AUC 0.902  malignant AUC 0.894  sens 0.744  spec 0.874
+  fold 4: train 602 test 156  acc 0.827  bal-acc 0.845  macro-AUC 0.947  malignant AUC 0.931  sens 0.750  spec 0.931
+  fold 5: train 605 test 153  acc 0.837  bal-acc 0.849  macro-AUC 0.945  malignant AUC 0.916  sens 0.791  spec 0.918
+  accuracy 0.795  balanced_accuracy 0.799  macro_auc_ovr 0.927  malignant_auc 0.914  malignant_sensitivity 0.764  malignant_specificity 0.901
+ONNX parity: max |sklearn - onnx| prob diff = 2.55e-06 over 20 images
+Exported model + 6 held-out demo images to ../app
