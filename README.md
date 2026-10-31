@@ -1,99 +1,79 @@
-# SecondLook: breast imaging results, explained
+# SecondLook
 
-Made for Code the Cure Hacks 2026. Live demo: https://secondlook-codethecure.netlify.app
+Live demo: https://secondlook-codethecure.netlify.app
+Built for Code the Cure Hacks 2026 by David Lee and Ajay Sriram Sankar.
 
-SecondLook helps people who just got a breast imaging result. It explains the report in plain words, answers follow-up questions, and helps people get ready to talk with their doctor. It is a learning tool. It cannot tell anyone whether they have cancer.
+So the story starts with David's grandma. She found a lump and got diagnosed with stage III breast cancer in her 50s. When you get a report back after a scan, it's full of words nobody explains, and you're left googling "BI-RADS 4A" at 11pm. We wanted something that tells you what the words mean and what to ask your doctor next.
 
-## What is in it
+SecondLook is a learning tool. It can't tell anyone if they have cancer and it never tries to.
 
-| Part | What it does | How it works |
-|---|---|---|
-| **Read my report** | Paste a mammogram, ultrasound or biopsy report. See what the BI-RADS number means, breast density, where the finding is, and what each word means. | Fixed rules and a hand-written glossary of more than 70 terms. No AI. It also notices "no calcifications" style wording. |
-| **Report sanity check** (warning box above the findings) | Points out values that cannot be right (a clock position of 0, 13 or 14, a strange size or unit), BI-RADS numbers that disagree or look like an earlier exam, two descriptions of one lesion that disagree, left and right mismatches, and text it could not read. Labels: Needs checking, Possible conflict, Could not interpret. | Fixed rules in `app/js/sanity.js`. No AI. It never decides which statement is right, and it keeps your original text and every value it found. |
-| **Ask a question** (chat under the report) | Ask follow-up questions about the report. Ask for questions to bring to an appointment. | A language model from OpenAI, called from our server. It gets the decoded report as context. We wrote its instructions. We did not train or fine-tune it. |
-| **Ultrasound AI** | A research demo. Says whether an ultrasound image looks most like normal, benign or malignant images, and shows a highlight map. | Our own trained classification layer on top of a frozen, pretrained EfficientNet-B0, with our own data cleanup, testing and in-browser version. Runs in your browser. See [MODEL_CARD.md](MODEL_CARD.md). |
-| **When to see a doctor** | A warning sign checklist and a screening planner. | Rules from the CDC, American Cancer Society, NHS, NICE and the U.S. Preventive Services Task Force. |
-| **Biopsy lab** | A learning tool that shows how a small model reads cell measurements. | Logistic regression on the Wisconsin Diagnostic Breast Cancer data. |
+## What's in it
 
-## Why it mixes rules, a language model and an image classifier
+- **Read my report**: paste a mammogram, ultrasound or biopsy report (or simply upload a photo or PDF of it). It breaks down the BI-RADS number, breast density, where the finding is, and explains every hard/potentially confusing word. This part is just rules and a hand-written glossary, no AI, so it can't make stuff up.
+- **Sanity check**: a warning box above the results if the report looks off. Stuff like "14 o'clock" (clocks stop at 12), a 35 cm mass, two different BI-RADS numbers, or left and right getting mixed up. It never decides which part is right. It just says "hey, double check your copy and paste and ask the imaging team."
+- **Chat**: ask follow-up questions about your report, or get a list of questions for your appointment. This one is an OpenAI model with our own instructions and safety rules on top.
+- **Ultrasound AI**: a research demo. It looks at an ultrasound and says whether it looks most like normal, benign or malignant images, and shows a heat map of where it looked.
+- **When to see a doctor**: warning signs checklist and a screening planner, based on CDC, ACS, NHS, NICE and USPSTF advice.
+- **Biopsy lab**: a tiny model that shows how cell measurements turn into a score.
 
-Each part uses the tool that fits its job. We did not add AI where plain rules are safer.
+## Why it's a mix of rules and AI
 
-| Job | Tool | Why |
-|---|---|---|
-| Pull findings out of a report (BI-RADS score, breast density, where the finding is, how big, which words) | Fixed rules and a hand-written glossary | Predictable and easy to test. The same report always gives the same result, and nothing can be made up. |
-| Explain those findings, answer follow-up questions, write questions for the doctor | A language model (OpenAI), told what the rules found | Good at plain language and at following a conversation. Wrapped in fixed safety notes and a reply guard, because it can be wrong. |
-| Look at the pixels of an ultrasound picture | Our own trained classifier on a pretrained image model | A different job. Pixels need an image model. Labeled as a research demo. |
-| Warning signs and screening planner | Rules from published advice | Medical advice should be traceable to a source. |
-| Biopsy lab | A small model on cell measurements, with exact per-measurement contributions | A learning tool that shows how a model reaches its score. |
+We didn't want to throw AI at everything. Pulling facts out of a report is something rules do better, because the same report always gives the same answer. Explaining things in plain words and answering follow-ups is where a language model actually helps, so that's where we use one, with guardrails. The ultrasound picture stuff needs an image model, so that's what that part uses.
 
-## Photo and PDF upload
+## Reading photos and PDFs
 
-You can upload a photo or a PDF of a report. A PDF that has real text is copied directly. A photo or scanned PDF is read with open-source text reading (Tesseract) running in your browser. The text is shown in the box so you can check it and fix mistakes. If the photo was hard to read, we do not explain it until you have checked the text. Limits: clear, straight-on photos work best. A blurry or tilted photo can give wrong numbers or missing words, which is why the text is shown for checking. Only English is supported, only the first 6 pages of a PDF are read, and files must be under 20 MB. We tested a clean picture, a text PDF, a scanned PDF and a blurry tilted photo. We have not tested real patient photos or handwriting.
+Upload a photo or PDF and it reads the text right in your browser (Tesseract for photos, PDF.js for PDFs). Nothing gets uploaded anywhere. It shows you the text so you can fix mistakes, and if the photo was blurry it won't explain anything until you've checked it. Clear, straight-on photos work best. English only, first 6 pages, under 20 MB. We tried a clean picture, a text PDF, a scanned PDF and a blurry tilted photo. We haven't tried real patient photos or handwriting.
 
-## Report sanity check
+## Privacy
 
-Some reports contain a typing or copy mistake, or two statements that do not fit together. SecondLook looks for these and shows a warning box above the decoded findings. Each warning says what we saw and what to ask your imaging team (the team that did the scan).
-
-It gives the benefit of the doubt. For an impossible value, it still shows the whole report, says it may be a copy and paste slip or exactly what the doctor wrote, and asks you to double check your copy and have the imaging team confirm.
-
-The chat server runs the same check on its own and tells the assistant what it found. It also tells the assistant whether a family history is stated, only mentioned, or NOT stated, so appointment questions do not assume one.
-
-Limits: It uses fixed rules, so it can miss things. It cannot catch every contradiction. Two descriptions of one lesion only count as a conflict when the side, the clock position or a back-reference such as "the mass" lets us tell they are about the same lesion. Small unit slips, such as 1.2 mm where 1.2 cm was meant, are missed. Clock positions written as words, such as "fourteen o'clock", are not detected. The warning area uses text labels and is built for keyboard and screen reader use, but we have not tested it with a real screen reader.
-
-## What leaves your device
-
-- The report explainer, ultrasound demo, symptom check and biopsy lab run in your browser and send nothing out.
-- Uploading a photo or PDF of a report is read on your device too. The picture is never sent anywhere. The reading tools and English language file are served from our own site, so no outside site is contacted.
-- The chat sends your question and your report text to our server, which sends them to OpenAI. Our server does not store them. OpenAI may keep them for a short time under its own rules. The OpenAI key lives only on the server.
-- Please use made-up or anonymous text when demonstrating.
+- Decoder, sanity check, photo reading, ultrasound demo, symptom check and biopsy lab all stay in your browser.
+- The chat is the one thing that leaves. It sends your question and your report text to our server, which passes it to OpenAI. We don't store it. OpenAI has its own rules about what it keeps. You have to click "I understand" before any of that happens.
+- Please only use made-up or anonymous reports when you try it.
 
 ## Run it
 
-You need Node 20 or newer. For the chat, put your key in a file named `.env` (copy `.env.example`).
+Needs Node 20+. For the chat, copy `.env.example` to `.env` and put your OpenAI key in it.
 
 ```bash
 node dev-server.mjs
-# open http://localhost:8000
+# then open http://localhost:8000
 ```
 
-Without a key, everything works except the chat, which says it is not set up.
+Even if you have no api key, everything will still work except the chat.
 
-To deploy, publish the `app` folder and the `netlify/functions` folder on Netlify and set `OPENAI_API_KEY` in the site settings. On a plain static host such as GitHub Pages the chat shows a message that it is not available there.
+To deploy, publish `app` and `netlify/functions` on Netlify and set `OPENAI_API_KEY` in the site settings. On a plain static host like GitHub Pages the chat just says it isn't available.
 
-## Test it
+## Tests
 
 ```bash
-npm test             # unit tests, no network
-node eval/run.mjs    # 135 conversations against the real assistant (uses API credit)
-node tests/e2e.mjs     # browser test of the whole journey, needs: npm i playwright-core, and Chrome
-node tests/audit.mjs   # keyboard-only pass, every button and link, layout checks, source links
-node tests/live-check.mjs [url]   # smoke test of a running copy (local or deployed)
+npm test                       # unit tests, no network
+node eval/run.mjs              # 135 chat conversations against the real assistant (costs API credit so pls dont abuse. Rate limiting is in place though)
+node tests/e2e.mjs             # browser test of the whole thing (needs playwright-core and Chrome)
+node tests/audit.mjs           # keyboard pass, every button and link, layout
+node tests/live-check.mjs      # quick check of a running copy
 ```
 
-See [docs/TEST_PLAN.md](docs/TEST_PLAN.md) for what has and has not been tested, and [docs/PROGRESS.md](docs/PROGRESS.md) for project status.
+More detail in [docs/TEST_PLAN.md](docs/TEST_PLAN.md) and [docs/PROGRESS.md](docs/PROGRESS.md). So please check that out as all these md files are our main documentation/explanations.
 
-## Ultrasound model results
+## How the ultrasound model did
 
-These are our own results on the public BUSI image set. They are stored in `training/results/busi_metrics.json`.
+Numbers are from the public BUSI image set, saved in `training/results/busi_metrics.json`.
 
-- 758 usable images after we removed 22 images whose copies had conflicting labels.
-- 5-fold test with copies of the same image kept together.
+- 758 usable images (we dropped 22 that had copies with conflicting labels)
+- 5-fold test, with copies of the same image kept together
 
-| Measure (average over 5 rounds, plus or minus spread) | Result |
+| What | Result |
 |---|---|
-| Cancer vs not, AUC (1.0 perfect, 0.5 guessing) | 0.904 ± 0.014 (likely range 0.876 to 0.925) |
+| Cancer vs not, AUC (1.0 perfect, 0.5 guessing) | 0.904 ± 0.014 |
 | Cancer images found | 0.750 ± 0.080 |
 | Non-cancer images cleared | 0.877 ± 0.028 |
 | Right group out of three | 0.777 ± 0.032 |
 
-Many papers report 95 to 98 percent on this image set. Those numbers can be too high when copies of one image land in both the practice and test sets. BUSI does not say which images come from the same woman, so our numbers could also be too high. Read [MODEL_CARD.md](MODEL_CARD.md) for the limits.
+So it misses about 1 in 4 cancers. A lot of papers report 95 to 98 percent on this dataset, but those can be inflated when copies of the same image end up in both train and test. BUSI doesn't tell you which images are from the same person, so ours could be a bit high too. Full details and limits are in [MODEL_CARD.md](MODEL_CARD.md).
 
-## Biopsy lab results
+**Biopsy lab:** 569 samples (WDBC). 96.5% accuracy on the 20% we held out, 92.9% of cancers found, 98.6% of benign cleared. But this is a learning demo, not a diagnosis tool.
 
-569 needle samples (WDBC). Repeated 10-fold testing: logistic regression 97.9% accuracy. On the 20% we kept aside: 96.5% accuracy, 92.9% of cancers found, 98.6% of benign cases cleared. This is a learning demo, not a diagnostic tool.
-
-## Reproduce the models
+## Retrain the models
 
 ```bash
 cd training
@@ -102,40 +82,40 @@ python train_wdbc.py --out ../app
 python train_busi.py --data /path/to/Dataset_BUSI_with_GT --out ../app --compare
 ```
 
-BUSI is on Hugging Face as `gymprathap/Breast-Cancer-Ultrasound-Images-Dataset` (CC BY 4.0). We have not re-run this training in the latest session.
+BUSI is on Hugging Face as `gymprathap/Breast-Cancer-Ultrasound-Images-Dataset` (CC BY 4.0). note: We haven't re-run this training since the last round of changes.
 
 ## Folders
 
 ```
-app/            the website (plain HTML, CSS and JavaScript, no build step)
-assistant/      the assistant's instructions and server logic
-netlify/        the chat function
-eval/           135 test conversations and the runner
-tests/          unit tests and the browser test
-training/       Python code that trained the small models
-docs/           test plan and progress tracker
+app/         the website (plain HTML, CSS, JS, no build step)
+assistant/   chat instructions and server logic
+netlify/     the chat function
+eval/        135 test conversations and the runner
+tests/       unit tests and browser tests
+training/    Python code for the small models
+docs/        test plan, progress, deploy notes
 ```
 
-## Credits and licenses
+## Where our AI came from
 
-- **BUSI:** Al-Dhabyani W, Gomaa M, Khaled H, Fahmy A. Dataset of breast ultrasound images. Data in Brief 28:104863 (2020). CC BY 4.0.
-- **WDBC:** Wolberg WH, Street WN, Mangasarian OL. Breast Cancer Wisconsin (Diagnostic). UCI (1995). CC BY 4.0.
-- **Duplicate audit:** Pawłowska A et al. Data in Brief (2023).
-- **EfficientNet:** Tan M, Le Q (2019). Weights from the `timm` library, listed as Apache-2.0.
-- **ONNX Runtime Web:** MIT.
-- **Tesseract.js, Tesseract.js core and the English language data (reads text from photos):** Apache-2.0. Files are in app/vendor/ocr with their licenses.
-- **PDF.js (reads text out of PDFs):** Apache-2.0. Files are in app/vendor/pdf.
-- **Chat model:** OpenAI, used through its API under its terms.
+- The **chat** is an OpenAI model. We wrote the instructions and the safety code around it. We didn't train or fine-tune it.
+- The **ultrasound model** is a pretrained EfficientNet-B0 that we froze, with our own small classifier trained on top of it.
+- We also used an AI coding assistant (Claude) while building this, but only for checking code, a little test writing/fixes and formatting some of these large tables you may see in these docs, although we did type them out and Claude only did formatting of tables that we told it to do.
 
-## Background notes
+## Credits
 
-[RESEARCH.md](RESEARCH.md) holds early research notes from the team. They are not part of the app, and the numbers in them were not re-checked in the final audit. [MODEL_CARD.md](MODEL_CARD.md) is the source of truth for the ultrasound model.
+- BUSI: Al-Dhabyani W, Gomaa M, Khaled H, Fahmy A. Dataset of breast ultrasound images. Data in Brief 28:104863 (2020). CC BY 4.0.
+- WDBC: Wolberg WH, Street WN, Mangasarian OL. Breast Cancer Wisconsin (Diagnostic). UCI (1995). CC BY 4.0.
+- Duplicate audit: Pawłowska A et al. Data in Brief (2023).
+- EfficientNet: Tan M, Le Q (2019), weights from `timm` (Apache-2.0).
+- ONNX Runtime Web (MIT), Tesseract.js and its English data (Apache-2.0), PDF.js (Apache-2.0). Licenses are in `app/vendor`.
 
-## Limits
+[RESEARCH.md](RESEARCH.md) is our early notes (not part of the app, and the numbers weren't rechecked). [MODEL_CARD.md](MODEL_CARD.md) is the one to trust for the ultrasound model.
 
-- This is a learning tool, not a medical device. Please never use it to see a doctor later than you would have.
-- The ultrasound model has only seen images from one hospital. It misses about 1 in 4 cancers in our test.
-- The report explainer handles common U.S. wording and can miss unusual wording.
-- The sanity check is a set of fixed rules. It will miss some problems, and its warnings are not a diagnosis.
-- We have not verified a Netlify deploy ourselves. The owner must rotate the OpenAI key before deploying.
-- The chat can be wrong. No clinician has reviewed this project yet.
+## Limitations
+
+- It's a learning tool, not a medical device. Please don't use it to wait longer to see a doctor.
+- The ultrasound model has only seen one hospital's images and misses about 1 in 4 cancers in our test.
+- The report reader knows common U.S. wording and can miss unusual stuff.
+- The sanity check is fixed rules, so it will miss some problems. Its warnings are not a diagnosis.
+- The chat can be wrong, and no doctor has reviewed this project yet.

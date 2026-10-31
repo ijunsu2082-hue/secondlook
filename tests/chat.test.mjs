@@ -159,9 +159,9 @@ test("words the reply did not explain get a fixed definition, and explained word
   const w = missingDefinitions("Your mammogram showed a mass. A biopsy is the next step.");
   assert.deepEqual(w.map((x) => x.term), ["mammogram", "biopsy"]);
   assert.match(w[0].def, /X-ray/);
-  // Already explained in the reply itself: nothing is added.
+  // Term already in the reply
   assert.deepEqual(missingDefinitions("A biopsy is a test that takes a tiny piece of tissue."), []);
-  // Already shown earlier in this conversation: nothing is repeated.
+  // Term shown earlier
   assert.deepEqual(missingDefinitions("Your biopsy is next.", ["biopsy"]), []);
 });
 
@@ -182,7 +182,7 @@ test("the server sends the missing definitions with the reply, and skips ones th
   assert.ok(validate({ ...body, known: "nope" }));
 });
 
-// ---------------------------------------------------------------- report check in the chat context
+// ---------------------------------------------------------------- Report check in chat
 import fs from "node:fs";
 import { buildContext, checkBlock, runReportCheck, SYSTEM_PROMPT } from "../assistant/prompt.mjs";
 import { REPORT_CHECK_NOTE, EMERGENCY_NOTE } from "../assistant/core.mjs";
@@ -212,16 +212,16 @@ test("the family history line is exactly one of three things", () => {
   assert.match(buildContext({ text: REPORTS.r18 }), /^Family history: stated in the report: grandmother$/m);
   assert.match(buildContext({ text: REPORTS.r17 }), /^Family history: mentioned in the report but not described$/m);
   assert.match(buildContext({ text: REPORTS.r3 }), /^Family history: NOT stated in the report or by the person$/m);
-  // The word "history" alone is not a family history.
+  // Word history alone
   assert.match(buildContext({ text: "HISTORY: Prior breast surgery in 2015. No other history given. BI-RADS 2." }), /^Family history: NOT stated in the report or by the person$/m);
   for (const id of ["r3", "r17", "r18"]) assert.equal((buildContext({ text: REPORTS[id] }).match(/^Family history:/gm) || []).length, 1, id);
 });
 
 test("the server works from the text, not from what the page says it found", () => {
-  // The page claims a clean report. The text says otherwise. The server trusts the text.
+  // Page says clean, text says otherwise
   const lied = buildContext({ text: REPORTS.r11, parsed: { birads: ["2"], findings: [], warnings: [] } });
   assert.match(lied, /- \[Needs checking\]/);
-  // The page claims a conflict. The text has none. No conflict is added.
+  // Page says conflict, text has none
   const lied2 = buildContext({ text: REPORTS.r3, parsed: { birads: ["5", "2"], findings: [], warnings: [{ title: "fake conflict" }] } });
   assert.ok(!/fake conflict/.test(lied2));
   assert.ok(!/- \[/.test(lied2));
@@ -298,16 +298,16 @@ test("the model is given the server's check, and the person gets a fixed note wh
   assert.ok(sys.includes(CHECK_HEADER));
   assert.match(sys, /\[Needs checking\]/);
 
-  // A report with a stated family history reaches the model with that line, nothing more.
+  // Report with family history
   await respond({ messages: [user("What family history do I have?")], report: { text: REPORTS.r18 } }, { apiKey: "k", fetchImpl: spy });
   assert.match(sent.messages.map((m) => m.content).join("\n"), /Family history: stated in the report: grandmother/);
 
-  // A clean report gets no fixed note.
+  // Clean report
   const clean = await respond({ messages: [user("What does this mean?")], report: { text: REPORTS.r3 } }, { apiKey: "k", fetchImpl: fakeOpenAI("Your report says BI-RADS 1.") });
   assert.equal(clean.json.reportCheck, false);
   assert.equal(clean.json.note, null);
 
-  // No report, no check.
+  // No report
   const none = await respond({ messages: [user("What is BI-RADS?")] }, { apiKey: "k", fetchImpl: fakeOpenAI("A score from 0 to 6.") });
   assert.equal(none.json.reportCheck, false);
 });

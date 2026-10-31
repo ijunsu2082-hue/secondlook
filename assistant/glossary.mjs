@@ -1,6 +1,5 @@
-// Fixed, hand-written definitions for medical words. If an assistant reply uses one of these
-// words and does not explain it, the server adds the definition below to the answer.
-// `re` finds the word, `cue` is what an explanation in the reply would look like.
+// Medical words and their definitions
+// re finds the word, cue finds an explanation
 export const TERM_DEFS = [
   { name: "mammogram", re: /\bmammogra(m|phy)s?\b/i, cue: /x-?ray/i,
     def: "An X-ray picture of the breast. It can show changes too small to feel." },
@@ -34,7 +33,7 @@ export const TERM_DEFS = [
     def: "BRCA1 and BRCA2 are genes that help protect against cancer. A harmful change in them raises the chance of breast and ovarian cancer." },
 ];
 
-// Words used in `reply` that it never explained and that the person has not been shown yet.
+// Words that need explaining + the glossary box
 export function missingDefinitions(reply, known = []) {
   const seen = new Set(known);
   return TERM_DEFS

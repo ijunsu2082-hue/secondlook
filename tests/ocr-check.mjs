@@ -1,5 +1,4 @@
-// Browser check for photo and PDF upload. Run: OUT=<empty dir> BASE=http://localhost:8000 node tests/ocr-check.mjs
-// Needs playwright-core and Chrome. It makes its own fictional report picture and PDFs.
+// Photo and PDF upload check
 import { chromium } from "playwright-core";
 import fs from "node:fs";
 const dir = process.env.OUT;

@@ -1,17 +1,5 @@
-"""Biopsy cell-measurement model on the Wisconsin Diagnostic Breast Cancer data.
-
-Dataset: Wolberg WH, Street WN, Mangasarian OL. Breast Cancer Wisconsin
-(Diagnostic). UCI Machine Learning Repository, 1995. doi:10.24432/C5DW2B
-569 fine-needle-aspirate (FNA) samples, 212 malignant / 357 benign, 30 features
-= mean, standard error and "worst" (mean of the 3 largest) of 10 nucleus
-measurements. Bundled with scikit-learn (no download).
-
-We compare four standard models with repeated stratified 10-fold CV, then deploy
-logistic regression: it is within noise of the best and every prediction can be
-explained exactly as a sum of per-feature contributions.
-
-Usage: python train_wdbc.py --out ../app
-"""
+# Trains the biopsy lab model on the WDBC data
+# Usage: python train_wdbc.py --out ../app
 import argparse
 import json
 from pathlib import Path
@@ -36,7 +24,7 @@ def main():
 
     d = load_breast_cancer()
     X = d.data
-    y = (d.target == 0).astype(int)  # scikit-learn codes malignant as 0; we use 1 = malignant
+    y = (d.target == 0).astype(int)  # 1 means malignant
     names = list(d.feature_names)
     assert y.sum() == 212 and len(y) == 569
 
@@ -58,7 +46,7 @@ def main():
         print(f"{name:22s} " + "  ".join(f"{k} {v['mean']:.3f}±{v['std']:.3f}"
                                           for k, v in comparison[name].items()))
 
-    # Deployed model: C chosen by inner CV on an 80% split; 20% kept for an honest test.
+    # Picks C by inner CV
     Xtr, Xte, ytr, yte, itr, ite = train_test_split(X, y, np.arange(len(y)), test_size=0.2,
                                                     stratify=y, random_state=SEED)
     scaler = StandardScaler().fit(Xtr)
@@ -72,11 +60,11 @@ def main():
             "chosen_C": float(lr.C_[0])}
     print("Deployed LR test:", test)
 
-    # Re-implement the prediction the way the browser will, to prove parity.
+    # Repeats the prediction
     z = ((Xte - scaler.mean_) / scaler.scale_) @ lr.coef_[0] + lr.intercept_[0]
     assert np.allclose(1 / (1 + np.exp(-z)), p, atol=1e-9)
 
-    # Example cases from the held-out 20%: 3 benign + 3 malignant, seeded.
+    # Sample cases, 3 benign and 3 malignant
     rng = np.random.default_rng(SEED)
     examples = []
     for label in (0, 1):

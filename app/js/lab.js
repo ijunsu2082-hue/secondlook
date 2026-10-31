@@ -1,5 +1,4 @@
-// Biopsy lab: logistic regression on the Wisconsin Diagnostic Breast Cancer
-// measurements, explained as exact per-feature contributions.
+// Biopsy lab
 import { esc } from "./report.js";
 
 const $ = (s) => document.querySelector(s);
@@ -29,7 +28,7 @@ export async function initLab() {
     if (!r.ok) throw new Error("missing");
     M = await r.json();
   } catch {
-    $("#lab-out").innerHTML = `<div class="warn">The lab could not load its data. Please refresh the page and try again.</div>`;
+    $("#lab-out").innerHTML = `<div class="warn">Hey, the lab couldn't load its data. Please refresh and try again.</div>`;
     return;
   }
   $("#lab-cases").innerHTML = M.examples.map((e, i) =>
@@ -51,7 +50,7 @@ function pick(i) {
     means.map(([f, j]) => `<div class="slider"><label for="s${j}" title="${esc(BASE[pretty(f).base])}">${esc(pretty(f).base)}</label>
       <input type="range" id="s${j}" data-j="${j}" min="${M.min[j]}" max="${M.max[j]}" step="${(M.max[j] - M.min[j]) / 200}" value="${values[j]}">
       <output id="o${j}">${fmt(values[j])}</output></div>`).join("") +
-    `<button class="btn small" id="lab-reset" style="margin-top:10px">Go back to the real case</button>`;
+    `<button class="btn small" id="lab-reset" style="margin-top:10px">Back to the real case</button>`;
   $("#lab-sliders").querySelectorAll("input").forEach((el) => el.addEventListener("input", () => {
     values[+el.dataset.j] = +el.value;
     $("#o" + el.dataset.j).textContent = fmt(+el.value);
@@ -76,7 +75,7 @@ function render() {
 
   $("#lab-out").innerHTML = `
     <div class="verdict ${tone}">
-      <h3>The model leans toward ${p >= 0.5 ? "malignant (cancer)" : "benign (not cancer)"}</h3><p style="margin:0 0 6px;font-size:14px">Its score for malignant is ${p < 0.001 ? "under 0.1" : p > 0.999 ? "over 99.9" : (p * 100).toFixed(1)} out of 100. This is a score from a small model. It is not the chance that a real person has cancer.</p>
+      <h3>The model leans toward ${p >= 0.5 ? "malignant (cancer)" : "benign (not cancer)"}</h3><p style="margin:0 0 6px;font-size:14px">Its score for malignant is ${p < 0.001 ? "under 0.1" : p > 0.999 ? "over 99.9" : (p * 100).toFixed(1)} out of 100. This is a score from a small model. It's not the chance that a real person has cancer.</p>
       <div class="gauge" aria-hidden="true"><i style="left:${(p * 100).toFixed(1)}%"></i></div>
       <p style="margin:0;font-size:14px">${edited ? "You changed this case, so this is a what-if and not real data."
         : `This is a real case that was not used to teach the model (case ${esc(ex.id)}). The pathologist said it was <b>${esc(ex.truth)}</b>. ${(p >= 0.5) === (ex.truth === "malignant") ? "The model agrees." : "<b>The model gets this one wrong.</b> Models make mistakes."}`}</p>
@@ -92,7 +91,7 @@ function render() {
           <div class="bar" style="${c >= 0 ? `left:50%` : `left:${50 - w}%`};width:${w}%;background:${c >= 0 ? "var(--act)" : "var(--ok)"}"></div></div>`;
       }).join("")}</div>
       <p class="fine">“Average” is the average over all the nuclei in the image. “Highest 3” is the average of the three largest values. “Spread” shows how much the values vary.
-        Some measurements go together (radius, outline length and size), so look at the bars as a group, not one by one.</p>
+        Some measurements go together (radius, outline length and size), so look at the bars as a group (not one by one).</p>
     </div>
     <div class="card" style="margin-top:14px">
       <h3>How well does this model work?</h3>
@@ -102,6 +101,6 @@ function render() {
         <div class="metric"><b>${(t.specificity * 100).toFixed(1)}%</b><span>of benign cases correctly cleared</span></div>
       </div>
       <p class="fine" style="margin:0">A simple model (logistic regression) trained on the Wisconsin Diagnostic Breast Cancer dataset, which has 569 needle samples (Wolberg, Street and Mangasarian, UCI, 1995).
-        We kept 20% of the cases aside to test it. This is a learning tool. It is not used for real diagnosis.</p>
+        We kept 20% of the cases aside to test it. This is a learning tool. It's not used for real diagnosis.</p>
     </div>`;
 }

@@ -1,4 +1,4 @@
-// "How it works": what each part does, where the data and models come from, and what the limits are.
+// About tab
 import { TERMS } from "./knowledge.js";
 const $ = (s) => document.querySelector(s);
 const pm = (o) => `${o.mean.toFixed(3)} ± ${o.std.toFixed(3)}`;

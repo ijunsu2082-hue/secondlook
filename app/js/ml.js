@@ -1,5 +1,4 @@
-// In-browser inference with ONNX Runtime Web. Images never leave the device.
-// Also renders Class Activation Maps (CAM) from the model's last feature map.
+// Model inference and heatmaps
 
 const ort = window.ort;
 ort.env.wasm.numThreads = 1;
@@ -13,7 +12,7 @@ export async function loadModel(onnxUrl, metaUrl) {
   return { session, meta };
 }
 
-// Same preprocessing as training: stretch to size x size, RGB, ImageNet normalisation.
+// Resize, rgb and normalize
 export function toTensor(img, size, mean, std) {
   const c = document.createElement("canvas");
   c.width = c.height = size;
@@ -40,7 +39,7 @@ export async function classify(model, img) {
   return { probs, features: out.features.data, ch, h, w };
 }
 
-// CAM for class k: sum over channels of classifier weight x feature map (ReLU, 0..1).
+// Class activation map for one class
 export function cam(model, result, k) {
   const W = model.meta.classifier.weight[k];
   const { features: F, ch, h, w } = result;
@@ -60,7 +59,7 @@ export function cam(model, result, k) {
   return { map: m, h, w };
 }
 
-// Draw a heat overlay of a CAM onto `canvas` (already holding the image).
+// Paints the heat overlay
 export function drawCam(canvas, camMap, opacity) {
   const { map, h, w } = camMap;
   const small = document.createElement("canvas");
@@ -94,7 +93,7 @@ export function drawCam(canvas, camMap, opacity) {
   canvas.getContext("2d").drawImage(big, 0, 0);
 }
 
-// Perceptual warm ramp: transparent -> amber -> orange -> deep red.
+// Heat color ramp
 function heat(v) {
   const stops = [
     [0.0, [255, 237, 160]],
@@ -113,7 +112,7 @@ function heat(v) {
   return stops[stops.length - 1][1];
 }
 
-// Mean HSV-style saturation in 0..1. Ultrasound and grayscale scans are close to 0.
+// Average color saturation
 export function colourfulness(img) {
   const c = document.createElement("canvas");
   c.width = c.height = 64;

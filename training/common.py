@@ -1,12 +1,4 @@
-"""Shared training utilities: near-duplicate grouping, frozen-backbone feature
-extraction ("linear probe"), metrics, and ONNX export with Class Activation Maps.
-
-Why a linear probe: an ImageNet-pretrained CNN is frozen and only a logistic
-regression is trained on its pooled features. This needs one forward pass per
-image (no back-propagation), so it trains on an 8 GB laptop in minutes, and
-because the head is linear on globally-pooled features, the browser can still
-draw an exact Class Activation Map (Zhou et al., CVPR 2016).
-"""
+# Shared helpers for training: duplicate grouping, features, metrics, ONNX export
 import json
 from pathlib import Path
 
@@ -23,7 +15,7 @@ MEAN = (0.485, 0.456, 0.406)
 STD = (0.229, 0.224, 0.225)
 IMG = 224
 
-# Evaluation preprocessing matches the browser exactly: stretch to 224x224.
+# has to match the browser, plain stretch to 224x224
 eval_tf = transforms.Compose([
     transforms.Resize((IMG, IMG)),
     transforms.ToTensor(),
@@ -37,7 +29,7 @@ def device():
 
 # ---------------------------------------------------------------- duplicates
 def dhash(img, size=16):
-    """Difference hash: robust fingerprint for spotting near-identical images."""
+    # Tiny fingerprint of an image
     g = img.convert("L").resize((size + 1, size), Image.BILINEAR)
     a = np.asarray(g, dtype=np.int16)
     return (a[:, 1:] > a[:, :-1]).flatten()
@@ -60,8 +52,7 @@ def union_find_groups(n, pairs):
 
 
 def duplicate_groups(images, max_hamming=10):
-    """Images whose hashes differ in at most `max_hamming` of 256 bits share a
-    group, so near-duplicates never straddle train and test."""
+    # Puts near identical images in one group
     hashes = np.stack([dhash(im) for im in images])
     pairs = []
     for i in range(len(images)):
@@ -78,7 +69,7 @@ def make_backbone(arch="efficientnet_b0"):
 
 @torch.no_grad()
 def extract(backbone, images, dev, bs=16, flip=False, log=print):
-    """Global-average-pooled features (N x C). flip=True mirrors each image."""
+    # Pulls features from the frozen model
     backbone.to(dev)
     out = []
     for s in range(0, len(images), bs):
@@ -91,9 +82,7 @@ def extract(backbone, images, dev, bs=16, flip=False, log=print):
 
 
 def similarity_pairs(feats, threshold, center):
-    """Pairs of images whose centred, flip-averaged feature vectors have cosine
-    similarity >= threshold. Catches crops, shifts and re-saves that a pixel
-    hash misses."""
+    # Pairs of images that look the same to the model
     f = feats - center
     f = f / np.linalg.norm(f, axis=1, keepdims=True)
     pairs = []
@@ -106,8 +95,7 @@ def similarity_pairs(feats, threshold, center):
 
 
 def augment_like_keras(img, rng):
-    """Mild random augmentation (rotation +-10 deg, shift/zoom 10%, flip,
-    brightness), used only to calibrate the duplicate threshold."""
+    # Slightly tweaked copy of an image
     w, h = img.size
     im = img.rotate(rng.uniform(-10, 10), resample=Image.BILINEAR,
                     translate=(rng.uniform(-.1, .1) * w, rng.uniform(-.1, .1) * h))
@@ -122,9 +110,7 @@ def augment_like_keras(img, rng):
 
 
 def calibrate_threshold(backbone, images, center, dev, n=150, seed=0, log=print):
-    """Pick a cosine threshold that almost never joins two DIFFERENT images
-    (99.9th percentile of all different-image pairs in a random sample), then
-    report how many augmented copies of the same image it still catches."""
+    # Picks the similarity cutoff for duplicates
     rng = np.random.default_rng(seed)
     idx = rng.choice(len(images), min(n, len(images)), replace=False)
     base = [images[i] for i in idx]
@@ -157,7 +143,7 @@ def flip_avg_features(backbone, images, dev):
 
 # ---------------------------------------------------------------- metrics
 def metrics(probs, y, class_names, positive=None):
-    """positive: class indices that count as 'cancer' for the binary view."""
+    # Scores for one set of predictions
     pred = probs.argmax(1)
     k = len(class_names)
     out = {
@@ -199,9 +185,7 @@ def bootstrap_ci(probs, y, fn, n=1000, seed=0):
 
 # ---------------------------------------------------------------- export
 class ProbeModel(nn.Module):
-    """Frozen backbone + logistic-regression head folded into one linear layer.
-    Outputs class probabilities AND the last convolutional feature map, so the
-    browser computes CAM = sum_c W[class, c] * features[c]."""
+    # Folds the model + classifier into one layer
 
     def __init__(self, backbone, scaler, lr):
         super().__init__()
@@ -218,7 +202,7 @@ class ProbeModel(nn.Module):
 
 
 def export_onnx(backbone, scaler, lr, path, check_images, log=print):
-    """Export and prove the ONNX graph reproduces scikit-learn's probabilities."""
+    # Saves the ONNX file and checks it matches sklearn
     import onnxruntime as ort
     model = ProbeModel(backbone.cpu().eval(), scaler, lr).eval()
     torch.onnx.export(model, torch.randn(1, 3, IMG, IMG), str(path), input_names=["input"],

@@ -1,5 +1,4 @@
-// Report decoder: fixed rules (regular expressions and a hand-written glossary), no AI.
-// The chat panel (chat.js) receives the parsed result as context.
+// Report decoder
 import { initChat, setReportContext, ask } from "./chat.js";
 import { BIRADS, DENSITY, TERMS, QUESTIONS, EXAMPLES, SOURCES } from "./knowledge.js";
 import { checkReport, describeBirads, LEVELS } from "./sanity.js";
@@ -27,15 +26,13 @@ export function parseReport(text) {
     if (m) density = m[1].toUpperCase();
   }
 
-  // Locations: sentence by sentence so side, clock, distance and size belong together.
-  // Every valid clock mention in a sentence becomes its own finding. Positions that are not 1 to 12 are
-  // not matched here on purpose. sanity.js reports them so they are never dropped without a word.
+  // Locations per sentence
   const findings = [];
   for (const sentence of text.split(/(?<=[.!?])\s+|\n+/)) {
     const clocks = [...sentence.matchAll(/\b(1[0-2]|[1-9])(?::(00|30))?\s*o['’]?\s*clock\b/gi)];
     clocks.forEach((clock, i) => {
       const multi = clocks.length > 1;
-      // One clock in the sentence: look at the whole sentence. Several: only the words around this one.
+      // Text window for this clock
       const after = multi
         ? sentence.slice(clock.index + clock[0].length, i + 1 < clocks.length ? clocks[i + 1].index : sentence.length)
         : sentence;
@@ -67,7 +64,7 @@ function findTerms(text) {
     const info = TERM_INDEX.get(m[1].toLowerCase().replace(/\s+/g, " "));
     if (!info) continue;
     const before = text.slice(Math.max(0, m.index - 40), m.index);
-    // Anatomy and procedure words ("lymph node") are never "absent". Only findings are.
+    // Absent findings
     const negated = info.tone !== "info" && info.term !== "not parallel" && /\b(no|without|negative for)\b[^.;:\n]*$/i.test(before);
     hits.push({ start: m.index, end: m.index + m[0].length, ...info, negated });
   }
@@ -80,7 +77,7 @@ const TONE_LABEL = { ok: "usually a good sign", watch: "depends on the situation
 function scaleSvg(key) {
   const b = BIRADS[key];
   if (!b.range) return "";
-  // Log-like axis so the small ranges (0-2%, 2-10%) are visible.
+  // Log-like axis
   const pos = (v) => (v <= 0 ? 0 : (Math.log10(v + 1) / Math.log10(101)) * 100);
   const left = pos(b.range[0]);
   const width = Math.max(pos(b.range[1]) - left, 1.6);
@@ -91,7 +88,7 @@ function scaleSvg(key) {
     </div>`;
 }
 
-// The extra check never breaks the decoder. If it fails, say so instead of showing nothing.
+// Runs the sanity check
 function safeCheck(text) {
   try {
     return checkReport(text);
@@ -105,7 +102,7 @@ function safeCheck(text) {
   }
 }
 
-// BI-RADS numbers that only look like they come from an earlier exam are not "current" for this report.
+// Current BI-RADS numbers
 function currentBirads(r, check) {
   const facts = (check && check.facts && check.facts.birads) || [];
   return r.birads.filter((k) => {
@@ -114,8 +111,7 @@ function currentBirads(r, check) {
   });
 }
 
-// Questions for the doctor. Questions that came from a warning come first. The family history question is
-// neutral unless the report itself states a family history.
+// Questions for the doctor
 export function buildQuestions(r, check) {
   const qs = [];
   for (const w of (check && check.warnings) || []) if (w.question) qs.push(w.question);
@@ -163,8 +159,7 @@ function densityCard(d) {
 }
 
 function breastSvg(side, findings) {
-  // Clock face as the radiologist sees it, facing the patient: 12 = top, 3 = viewer's right.
-  // For the RIGHT breast, 9 o'clock is the outer side; for the LEFT breast, 3 o'clock is outer.
+  // Clock face layout
   const R = 70, cx = 90, cy = 90;
   let marks = "";
   for (const f of findings) {
@@ -192,7 +187,7 @@ function breastSvg(side, findings) {
   </svg>`;
 }
 
-// Clock positions the diagram cannot use (not 1 to 12, or an odd format). They are listed, never dropped quietly.
+// Clock positions that make no sense
 function unplacedClocks(check) {
   const seen = new Set();
   const out = [];
@@ -225,7 +220,7 @@ function locationCard(findings, check) {
   return `<div class="card"><h3>Where is the finding?</h3>${diagrams}${unplacedHtml}</div>`;
 }
 
-// Warning area shown first when the text has a value that looks wrong or parts that do not seem to match.
+// Warning area
 function sanityCard(check) {
   const items = check.warnings.map((w) => `<li>
       <span class="lvl lvl-${esc(w.level)}">${esc(w.label || LEVELS[w.level] || "Needs checking")}</span>
@@ -244,12 +239,12 @@ function sanityCard(check) {
   </section>`;
 }
 
-// Calm information lines. They are not warnings, so they carry no level badge.
+// Info lines
 function notesHtml(check) {
   return (check.notes || []).map((n) => `<div class="note-info"><b>${esc(n.title)}</b><p>${esc(n.detail)}</p></div>`).join("");
 }
 
-// Splits the text at the flagged stretches. Words explained by the glossary stay highlighted inside and outside the flags.
+// Splits text at flagged stretches
 function mergeFlags(flags, len) {
   const sorted = flags.map((f) => ({ start: Math.max(0, f.start), end: Math.min(len, f.end), titles: [f.title] }))
     .filter((f) => f.end > f.start).sort((a, b) => a.start - b.start);
@@ -265,7 +260,7 @@ function mergeFlags(flags, len) {
 function annotateTerms(text, hits, from, to) {
   let html = "", last = from;
   for (const h of hits) {
-    if (h.start < last || h.end > to) continue; // before this piece, or crossing its edge
+    if (h.start < last || h.end > to) continue; // Outside this piece
     html += esc(text.slice(last, h.start));
     const cls = h.negated ? "t-info" : "t-" + h.tone;
     html += `<mark class="term ${cls}" tabindex="0" data-term="${esc(h.term)}" data-neg="${h.negated ? 1 : 0}"${h.negated ? ' style="text-decoration:line-through;text-decoration-color:var(--muted)"' : ""}>${esc(text.slice(h.start, h.end))}</mark>`;
@@ -298,10 +293,10 @@ export function renderReport(text) {
   setReportContext({ text, parsed: r });
   const parts = [];
 
-  // Anything that looks wrong or does not match comes first, before anyone relies on the summary.
+  // Warnings
   if (check.hasIssues) parts.push(sanityCard(check));
 
-  // Summary sentence. When the report gives several numbers we never pick one for the reader.
+  // Summary sentence
   const d = describeBirads(check);
   const current = currentBirads(r, check);
   const worst = [...current].sort((a, b) => order(b) - order(a))[0];
@@ -317,7 +312,7 @@ export function renderReport(text) {
   const notes = notesHtml(check);
   if (notes) parts.push(notes);
 
-  // One card for every BI-RADS number found, so nothing is hidden when they disagree.
+  // BI-RADS cards
   const factsBirads = (check.facts && check.facts.birads) || [];
   for (const k of r.birads.sort((a, b) => order(b) - order(a))) {
     const m = factsBirads.filter((b) => b.category === k);
@@ -327,9 +322,9 @@ export function renderReport(text) {
   if (r.density) parts.push(densityCard(r.density));
   if (r.findings.length || unplacedClocks(check).length) parts.push(locationCard(r.findings, check));
 
-  // Annotated report + glossary of words found.
+  // Annotated report and glossary
   const seen = new Map();
-  // A word counts as "absent" only if every mention of it is negated.
+  // Words marked absent
   for (const h of r.terms) if (!seen.has(h.term) || (seen.get(h.term).negated && !h.negated)) seen.set(h.term, h);
   const legend = Object.entries(TONE_LABEL).map(([t, l]) => `<span><i style="background:var(--${t})"></i>${l}</span>`).join("");
   const flags = check.warnings.flatMap((w) => (w.spans || []).map((s) => ({ start: s.start, end: s.end, title: `${w.label || LEVELS[w.level]}: ${w.title}` })));
@@ -341,7 +336,7 @@ export function renderReport(text) {
       `<div class="term-row"><div><b>${esc(h.term)}</b>${h.negated ? '<span class="pill info">not seen</span>' : `<span class="pill ${h.tone}">${TONE_LABEL[h.tone]}</span>`}</div><div>${esc(h.def)}${h.negated ? " <i>Your report says this was not seen.</i>" : ""}</div></div>`).join("")}</div></div>`);
   }
 
-  // Questions to ask.
+  // Questions
   const qs = buildQuestions(r, check);
   parts.push(`<div class="card"><h3>Questions to bring to your appointment</h3><ol class="questions">${qs.map((q) => `<li>${esc(q)}</li>`).join("")}</ol>
     <div class="row"><button class="btn small" id="copy-questions">Copy these questions</button>
@@ -350,7 +345,7 @@ export function renderReport(text) {
     <a href="${SOURCES.acsBirads.url}" target="_blank" rel="noopener">${esc(SOURCES.acsBirads.label)}</a>. What your radiologist and doctor tell you always comes first.</p>`);
 
   out.innerHTML = parts.join("");
-  // Meet the warning first: keyboard and screen reader users land on it. No warning means focus stays where it was.
+  // Focus on the warning
   if (check.hasIssues) $("#sanity-h")?.focus();
   $("#tailor-questions")?.addEventListener("click", () => ask("Help me write questions to ask at my appointment."));
   const btn = $("#copy-questions");
@@ -378,7 +373,7 @@ export function initReport() {
   });
   $("#report-go").addEventListener("click", () => renderReport(ta.value));
 
-  // Photo or PDF upload: read on this device, show the text so it can be checked, then explain it.
+  // Photo or PDF upload
   const fileIn = $("#report-file"), fileStatus = $("#report-file-status"), drop = $("#report-drop");
   const say = (msg, kind = "") => { fileStatus.hidden = !msg; fileStatus.textContent = msg; fileStatus.dataset.kind = kind; };
   let reading = false;
@@ -427,7 +422,7 @@ export function initReport() {
     $("#report-out").innerHTML = `<div class="empty">Pick an example above, or paste a report, then press <b>Explain this report</b>.</div>`;
   });
 
-  // Term popovers (hover, focus or tap).
+  // Term popovers
   const pop = $("#popover");
   let shownAt = 0;
   const show = (el) => {
@@ -447,7 +442,7 @@ export function initReport() {
   out.addEventListener("click", (e) => e.target.matches("mark.term") && show(e.target));
   out.addEventListener("mouseout", (e) => e.target.matches("mark.term") && (pop.hidden = true));
   out.addEventListener("focusout", () => (pop.hidden = true));
-  // Hide on scroll, but not for the scroll that focusing a word causes (that would hide it from keyboard users).
+  // Hide popover on scroll
   window.addEventListener("scroll", () => { if (Date.now() - shownAt > 400) pop.hidden = true; }, { passive: true });
   document.addEventListener("keydown", (e) => e.key === "Escape" && (pop.hidden = true));
 }

@@ -1,19 +1,11 @@
-// Report sanity check: fixed rules that look for values that cannot be right, parts of a report that
-// may disagree, and text we could not read. It runs on the raw report text.
-//
-// It never diagnoses, never decides which of two conflicting findings is correct, never changes a unit,
-// a side or a category, and never throws away a valid finding. The labels it uses describe the TEXT
-// ("Needs checking", "Possible conflict", "Could not interpret"). They say nothing about anyone's health.
-// When something looks impossible we still show it, and we give the doctor the benefit of the doubt.
-//
-// Pure functions only, so the same code runs in the browser and on the server.
+// Report sanity check
 import { TERMS } from "./knowledge.js";
 
 export const LEVELS = { check: "Needs checking", conflict: "Possible conflict", unreadable: "Could not interpret" };
 
 const MAX_CHARS = 20000;
 const LEVEL_ORDER = { check: 0, conflict: 1, unreadable: 2 };
-// "BI-RADS 0-6" or "0 to 6" describes the scale. Built from a string so the dash characters stay as escapes.
+// Matches the BI-RADS scale text
 const RANGE_AFTER = new RegExp("^\\s*(?:-|\\u2013|\\u2014|to\\b|through\\b)\\s*\\d", "i");
 
 // ------------------------------------------------------------------ small helpers
@@ -62,8 +54,7 @@ export function splitSentences(input) {
       if (s) section = s;
     }
     out.push({ text: p.text, start: p.start, end: p.start + p.text.length, section });
-    // Background sections apply only to the sentence that carries their label, so a
-    // BI-RADS number written later in the report is not mistaken for an earlier exam.
+    // Background sections
     if (section === "COMPARISON" || section === "HISTORY") section = null;
   }
   return out;
@@ -75,7 +66,7 @@ function sentenceIndexAt(sents, idx) {
 }
 
 const NEG_RE = /\b(?:no|not|without|negative for|absence of|free of|denies|nor|neither|never|no evidence of)\b|n['’]t\b/i;
-// True when the word at `idx` is negated within its own clause ("No suspicious mass", "no cysts or solid masses").
+// Checks if a word is negated
 function negated(segText, idx) {
   const before = segText.slice(Math.max(0, idx - 80), idx);
   const clause = before.split(/[.;:]|\b(?:but|however|although|except)\b/i).pop();
@@ -99,7 +90,7 @@ function findClocks(text, sents) {
   let m;
   while ((m = re.exec(text)) !== null) {
     const si = sentenceIndexAt(sents, m.index);
-    if (si < 0 || !breastContext(sents[si].text)) continue;   // "9 o'clock this morning" is a time, not a position
+    if (si < 0 || !breastContext(sents[si].text)) continue;   // Skips times of day
     const hours = [];
     if (m[1] !== undefined) hours.push(Number(m[1]));
     hours.push(Number(m[3]));
@@ -125,7 +116,7 @@ function findBirads(text) {
       const index = m.index;
       const end = index + m[0].length;
       if (covered.some(([a, b]) => index < b && end > a)) continue;
-      // "BI-RADS 0-6" or "0 to 6" describes the scale, it is not a category
+      // Scale text
       if (RANGE_AFTER.test(text.slice(end, end + 12))) continue;
       covered.push([index, end]);
       const tok = m[1];
@@ -227,7 +218,7 @@ function scanWords(re, seg, skip) {
   return out;
 }
 
-// "likelihood of malignancy" in a description of a BI-RADS category is not a finding.
+// Category description wording
 const notAFinding = (segText, idx) => /\b(?:suspicion|likelihood|risk|chance|probability|rate)\s+(?:for|of)\s*$/i.test(segText.slice(Math.max(0, idx - 30), idx));
 
 function describeSegment(seg) {
@@ -242,7 +233,7 @@ function describeSegment(seg) {
 
 const BACK_REF = /\b(?:the|this|that|same|aforementioned|above|described)\b[^.]{0,25}\b(?:mass|lesion|cyst|nodule|finding|abnormality|area|tumou?r)\b/i;
 
-// Do two finding mentions describe the same lesion? "same", "uncertain", "different" or "none" (no reason to compare).
+// Compares two finding mentions
 function relate(a, b) {
   if (a === b) return "same";
   if (a.id && b.id) return a.id === b.id ? "same" : "different";
@@ -254,7 +245,7 @@ function relate(a, b) {
     if (da != null && db != null && Math.abs(da - db) > 2) return "different";
     return "same";
   }
-  if (a.hour && b.hour) return near ? "uncertain" : "none";     // same hour, side unknown on one of them
+  if (a.hour && b.hour) return near ? "uncertain" : "none";     // Same hour, one side unknown
   const later = a.sIdx <= b.sIdx ? b : a;
   if (near && (BACK_REF.test(later.text) || (a.noun && a.noun === b.noun))) return "uncertain";
   return "none";
@@ -346,7 +337,7 @@ function relateTargets(x, y) {
   if (a.type === "id" || b.type === "id") return "unclear";
   if (a.side && b.side && a.side !== b.side) return "different";
   if (a.type === "clock" && b.type === "clock") return "different";
-  return "unclear";                                // one is a side only, the other a position on that side
+  return "unclear";                                // Side only versus position
 }
 
 export function prettyTarget(t) {
@@ -504,7 +495,7 @@ export function checkReport(input) {
         `My report gives a size of “${m.raw}”. Can you confirm the number and the unit?`, span));
     }
   }
-  // the same number with both mm and cm
+  // Same number in mm and cm
   const sizes = meas.filter((m) => m.kind === "size");
   const byNumber = new Map();
   for (const m of sizes) for (const n of uniq(m.nums)) {
@@ -514,13 +505,13 @@ export function checkReport(input) {
   for (const [n, u] of byNumber) {
     if (!u.mm.length || !u.cm.length) continue;
     const sameSpot = u.mm.some((a) => u.cm.some((b) => a.key && a.key === b.key));
-    if (n < 10 && !sameSpot) continue;               // a 2 mm speck and a 2 cm mass can both be real
+    if (n < 10 && !sameSpot) continue;               // Skips small sizes
     const a = u.mm[0], b = u.cm[0];
     warnings.push(makeWarning(text, "size-unit-mismatch", "conflict", `The number ${tidy(n)} appears with both mm and cm`,
       `Your report uses ${tidy(n)} with two different units: “${a.raw}” and “${b.raw}”. ${tidy(n)} mm is ${tidy(n / 10)} cm, and ${tidy(n)} cm is ten times bigger. We cannot tell which one is right, and we did not change either. Please check the original report, and ask your imaging team to confirm the sizes.`,
       `My report has “${a.raw}” and “${b.raw}”. Which unit is right?`, [{ start: a.index, end: a.end }, { start: b.index, end: b.end }]));
   }
-  // very different sizes for the same spot
+  // Very different sizes, same spot
   const groups = new Map();
   for (const m of sizes) if (m.key && m.maxCm > 0) { if (!groups.has(m.key)) groups.set(m.key, []); groups.get(m.key).push(m); }
   for (const [key, list] of groups) {
@@ -545,9 +536,9 @@ export function checkReport(input) {
       `My report gives a size of “${m[1]}” with no unit. Is that mm or cm?`, [{ start: at, end: at + m[1].length }]));
   }
 
-  // ---------------- contradictory descriptions of one finding
+  // ---------------- conflicting descriptions
   const cap = mentions.slice(0, 200);
-  for (const seg of cap) {                                     // distances per segment help tell two lesions apart
+  for (const seg of cap) {                                     // Distances per segment
     const d = meas.find((x) => x.kind === "distance" && x.index >= seg.start && x.index < seg.end);
     seg.dist = d ? d.maxCm : null;
   }
@@ -620,7 +611,7 @@ export function checkReport(input) {
       [{ start: s.start, end: s.end }]));
   });
 
-  // ---------------- nothing we can read
+  // ---------------- unreadable text
   const hasDensity = /\b(?:density|dense|fatty|fibroglandular)\b/i.test(text);
   if (text.trim().length >= 30 && !facts.birads.length && !facts.biradsInvalid.length && !hasDensity && !clocks.length && !TERM_RE.test(text) && !birads.length) {
     warnings.push(makeWarning(text, "nothing-readable", "unreadable", "We could not find anything we know how to read",
@@ -628,7 +619,7 @@ export function checkReport(input) {
       "Can you send me a clear copy of my full report?", [{ start: text.search(/\S/), end: Math.min(text.length, text.search(/\S/) + 60) }]));
   }
 
-  // ---------------- order: severity group first, then position in the report
+  // ---------------- sort order
   const pos = (w) => (w.spans.length ? w.spans[0].start : Infinity);
   warnings.sort((a, b) => LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level] || pos(a) - pos(b));
   return { warnings, notes, facts, hasIssues: warnings.length > 0 };

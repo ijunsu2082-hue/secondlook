@@ -1,25 +1,36 @@
-# Which AI models detect and diagnose cancer best? Research report for CodeTheCure Hacks 2026
+# Our research notes: which AI models detect and diagnose cancer best?
 
-> **Read this first.** These are background notes from the early research phase of the hackathon. They are not part of the app. They cover more than breast cancer, and they mention a second project. The numbers were **not re-checked in the final audit**. Where this file and `MODEL_CARD.md` or the About page disagree, trust those two. Please check each source before quoting anything here.
+Research journal for Code the Cure Hacks 2026, by David Lee and Ajay Sriram Sankar.
 
-*Compiled October 26, 2026. Every figure was opened at its source, and the DOIs/PMIDs were checked against Crossref and PubMed. Anything we could not verify is marked as such. The section on our own experiments reports results we measured ourselves.*
+> **Read this first.** These are our early notes from the start of the hackathon, so they're not part of the app. They cover more than breast cancer, and they mention a second project we looked at. The numbers were **not re-checked in the final audit**. If this file and `MODEL_CARD.md` or the About page disagree, trust those two. Please check each source yourself before quoting anything here.
+
+*Compiled October 26, 2026. We opened every figure at its source and checked the DOIs and PMIDs against Crossref and PubMed. Anything we couldn't verify is marked as such. The section on our own experiments is stuff we measured ourselves.*
+
+Before building anything, we wanted to know what already works and what only looks good in a paper. This is what we found, in the order we found it.
+
+note: Claude helped us write some code, tests and documentation for this project, including some of code behind our own experiments in Part C. We decided what to look into, directed the work, and ran and checked the results. For this research doc, we wrote the notes, and Claude helped format it, fix our grammar and tell us if we forgot anything. So it may read a bit like AI with human prose, and that's why.
 
 ---
 
-## Part A, Breast cancer
+## Part A: Breast cancer
+
+Our project is about breast imaging, so that's where we started.
 
 ### A1. Screening mammography: what is used in clinics today
 
 | System | Evidence | Key results | Regulatory |
 |---|---|---|---|
-| **Transpara** (ScreenPoint), **MASAI randomised trial**, Sweden | 105,934 women randomised: AI-supported vs standard double reading | Cancer detection 6.4 vs 5.0 per 1,000 (ratio 1.29, 95% CI 1.09 to 1.51); screen-reading workload −44.2% (Lancet Digit Health 2025, PMID 39904652). Final results: sensitivity 80.5% vs 73.8% (p = 0.031); specificity 98.5% in both arms; interval cancers 1.55 vs 1.76 per 1,000 (ratio 0.88, CI 0.65 to 1.18, non-inferior but not significant) (Lancet 2026, PMID 41620232) | FDA 510(k), first K181704 (2018) |
+| **Transpara** (ScreenPoint), **MASAI randomised trial**, Sweden | 105,934 women randomised: AI-supported vs standard double reading | Cancer detection 6.4 vs 5.0 per 1,000 (ratio 1.29, 95% CI 1.09 to 1.51); screen-reading workload down 44.2% (Lancet Digit Health 2025, PMID 39904652). Final results: sensitivity 80.5% vs 73.8% (p = 0.031); specificity 98.5% in both arms; interval cancers 1.55 vs 1.76 per 1,000 (ratio 0.88, CI 0.65 to 1.18, non-inferior but not significant) (Lancet 2026, PMID 41620232) | FDA 510(k), first K181704 (2018) |
 | **Vara**, **PRAIM** real-world study, Germany | 463,094 women, 12 sites; observational | Detection 6.7 vs 5.7 per 1,000 (+17.6%); recall rate not inferior (37.4 vs 38.3 per 1,000); PPV of recall 17.9% vs 14.9% (Nat Med 2025, PMC11922743) | No FDA 510(k) found |
 | **Lunit INSIGHT MMG** | 170,230 exams plus a 14-reader study | Standalone AUROC 0.959; radiologists improved from 0.810 to 0.881 with AI (Lancet Digit Health 2020, PMID 33334578) | FDA K211678 (2021) |
 | **Lunit, ScreenTrustCAD** (prospective) | 55,581 women | One radiologist + AI found 261 vs 250 cancers for two radiologists (non-inferior) (PMID 37690911) | None |
-| **iCAD ProFound AI** (3D/DBT) | Reader study: 24 radiologists | Reader AUC 0.795 to 0.852; reading time −52.7% (PMC6677281) | FDA cleared (2018 to 2024) |
-| **Google / McKinney et al.**, Nature 2020 | UK and US datasets | False positives −5.7% / −1.2%; false negatives −9.4% / −2.7% (PMID 31894144) | Licensed to iCAD |
+| **iCAD ProFound AI** (3D/DBT) | Reader study: 24 radiologists | Reader AUC 0.795 to 0.852; reading time down 52.7% (PMC6677281) | FDA cleared (2018 to 2024) |
+| **Google / McKinney et al.**, Nature 2020 | UK and US datasets | False positives down 5.7% / 1.2%; false negatives down 9.4% / 2.7% (PMID 31894144) | Licensed to iCAD |
 
-**Do not overstate:**
+Quick glossary for this table: sensitivity is the share of real cancers a test catches, specificity is the share of healthy people it correctly clears, and PPV is how often a positive result turns out to be real.
+
+Two things we didn't want to overstate, so hey, here they are:
+
 - MASAI's interval-cancer reduction (ratio 0.88) is *not* statistically significant.
 - PRAIM is observational, not randomised.
 
@@ -30,11 +41,13 @@
   - Across 7 sites in 5 countries: C-index 0.75 to 0.84 (JCO 2022, PMC9148689).
   - Mayo Clinic biobank: 5-year C-index 0.71 vs 0.59 to 0.68 for the Gail, Tyrer-Cuzick and BCSC models (JNCI 2026).
   - Code and weights are MIT-licensed, research use only.
-  - Needs four "For Presentation" DICOM views at 1664×2048; tested on Hologic machines.
+  - Needs four "For Presentation" DICOM views at 1664x2048; tested on Hologic machines.
 - **Clairity Breast**: the first FDA De Novo authorisation for AI that predicts 5-year risk from a mammogram (DEN240047, May 30, 2025). Commercial.
 - **Systematic review** (41 retrospective studies, JNCI 2026): median AUC about 0.71 across prediction horizons.
 
 ### A3. Open datasets and what honest performance looks like
+
+This is the table where we learned to be suspicious of big accuracy numbers.
 
 | Dataset | Content | Typical reported performance | Pitfall |
 |---|---|---|---|
@@ -45,9 +58,13 @@
 
 ---
 
-## Part B, Cancer in general (multi-cancer)
+## Part B: Cancer in general (multi-cancer)
+
+We also looked wider, just to see where the field is heading.
 
 ### B1. Pathology foundation models (the current frontier)
+
+These are really big models trained on huge piles of microscope slides.
 
 | Model | Training scale | Headline result | Weights / licence |
 |---|---|---|---|
@@ -73,6 +90,7 @@ A 2026 benchmark of 32 foundation models (Nat Commun 2026) found that the differ
 ### B3. Multi-cancer early-detection blood tests
 
 **NHS-Galleri randomised trial** (NEJM 2026, doi:10.1056/NEJMoa2505723; 142,250 people):
+
 - **The primary endpoint was not met.** Stage III to IV incidence ratio 1.03 (0.92 to 1.14).
 - Test performance (Nat Med 2026):
   - PPV 46 to 58%
@@ -92,6 +110,8 @@ Early detection at population scale is still unsolved.
 
 ### B5. Lightweight backbones for a laptop
 
+A backbone is the pretrained image model underneath a classifier. We needed one small enough for a laptop.
+
 | Backbone | Params | GFLOPs | ImageNet top-1 |
 |---|---|---|---|
 | EfficientNet-B0 | 5.3M | 0.39 | 77.7% |
@@ -101,12 +121,14 @@ Early detection at population scale is still unsolved.
 
 ---
 
-## Part C, Our own experiments (reproducible; code in each repo's `training/`)
+## Part C: Our own experiments
+
+You can reproduce these, with code in each repo's `training/`. We measured every number below ourselves.
 
 ### C1. Breast ultrasound (BUSI)
 
 - **Cleaning.** We found duplicates by pixel hash plus deep-feature similarity. We **removed 22 images (9 groups) whose copies carry conflicting labels** and grouped the remaining duplicates.
-- **Protocol.** 5-fold stratified grouped cross-validation, with inner cross-validation to tune the model.
+- **Protocol.** 5-fold stratified grouped cross-validation, with inner cross-validation to tune the model. (Cross-validation means testing several times on different held-out slices of the data.)
 
 | Backbone (frozen) + logistic regression | Malignant AUC | Balanced accuracy | Sensitivity |
 |---|---|---|---|
@@ -114,9 +136,9 @@ Early detection at population scale is still unsolved.
 | ConvNeXt-Tiny | 0.888 | 0.775 | 0.759 |
 | DINOv2 ViT-S/14 | 0.914 | 0.799 | 0.764 |
 
-**Conclusion:** the three backbones are statistically indistinguishable on clean data. The smallest model wins on deployability.
+**What we took from it:** the three backbones are statistically indistinguishable on clean data. The smallest model wins on deployability.
 
-### C2. Breast FNA cells (WDBC), 5 × 10-fold cross-validation
+### C2. Breast FNA cells (WDBC), 5 x 10-fold cross-validation
 
 | Model | Accuracy | AUC |
 |---|---|---|
@@ -125,16 +147,16 @@ Early detection at population scale is still unsolved.
 | Random forest | 96.0% | 0.991 |
 | Gradient boosting | 96.2% | 0.992 |
 
-**Conclusion:** simple linear models are as good as ensembles here, and they are fully explainable.
+**What we took from it:** simple linear models are as good as ensembles here, and they are fully explainable.
 
-### C3. Cervical risk factors (UCI 383), 10 × 5-fold cross-validation, predicting Biopsy
+### C3. Cervical risk factors (UCI 383), 10 x 5-fold cross-validation, predicting Biopsy
 
 | Features | Logistic regression AUC | Random forest AUC |
 |---|---|---|
 | Risk-factor questionnaire only | 0.633 ± 0.083 | 0.675 ± 0.062 |
 | + Hinselmann, Schiller, cytology exams | 0.940 ± 0.041 | 0.955 ± 0.029 |
 
-**Conclusion:** self-reported risk factors barely beat chance. Screening exams carry the signal, so a questionnaire must never replace screening.
+**What we took from it:** self-reported risk factors barely beat chance. Screening exams carry the signal, so a questionnaire must never replace screening.
 
 ### C4. Multi Cancer (26 classes, 700 per class, frozen EfficientNet-B0 + logistic regression)
 
@@ -145,22 +167,22 @@ Early detection at population scale is still unsolved.
 
 70.3% of the sampled images had a detected near-duplicate.
 
-A pitfall we hit ourselves: our first grouping used plain union-find. It "chained" similar images into giant groups (665 of 700 images in one class), which left whole classes out of training and wrongly gave 76.8%. Complete-linkage clustering fixed this; the largest group is now 50 images.
+We also tripped over a pitfall ourselves. Our first grouping used plain union-find, and it "chained" similar images into giant groups (665 of 700 images in one class), which left whole classes out of training and wrongly gave 76.8%. Complete-linkage clustering fixed this, and the largest group is now 50 images.
 
 The hardest classes are the lymphoma subtypes (recall 71 to 75%).
 
-**Conclusion:** leakage inflates this benchmark by at least 2.6 points, and it is easy to get leakage control wrong in both directions.
+**What we took from it:** leakage inflates this benchmark by at least 2.6 points, and it is easy to get leakage control wrong in both directions.
 
 ---
 
-## Part D, Recommendation
+## Part D: What we recommend
 
-For a laptop-scale, honest hackathon demo:
+For an honest demo, this is where we landed:
 
 1. **Images:** a frozen ImageNet EfficientNet-B0 with a logistic-regression head.
    - Exported to ONNX and run in the browser.
-   - It gives an exact Class Activation Map.
-   - Accuracy is within noise of a 4× larger DINOv2 on clean data.
+   - It gives an exact Class Activation Map (the highlight map of where the model looked).
+   - Accuracy is within noise of a 4x larger DINOv2 on clean data.
 2. **Tabular data:** logistic regression with transparent per-feature contributions.
 3. **Symptoms and reports:** deterministic rules from NICE NG12, NHS, ACS, CDC, ACR BI-RADS and USPSTF, never a generative chatbot.
 4. **Always** check for leakage (duplicates, augmentation, patient overlap), and report the conservative number.

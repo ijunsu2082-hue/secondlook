@@ -1,4 +1,4 @@
-// Tab router and lazy initialisation of each section.
+// Tab router
 import { initReport } from "./report.js";
 import { initScan } from "./scan.js";
 import { initCheck } from "./check.js";
@@ -16,7 +16,7 @@ function show(tab) {
   const active = document.querySelector(".tabs a[aria-current]");
   if (active) {
     active.setAttribute("aria-current", "page");
-    const nav = active.parentElement;  // keep the active tab visible in the scrollable phone tab bar
+    const nav = active.parentElement;  // Active tab scroll
     nav.scrollLeft = active.offsetLeft - nav.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2;
   }
   if (INIT[tab] && !started.has(tab)) {
@@ -43,5 +43,5 @@ document.addEventListener("click", (e) => {
 });
 window.addEventListener("popstate", () => show(location.hash.slice(1)));
 show(location.hash.slice(1));
-// Get the model ready in the background so the first result is quick.
+// Preloads the model
 setTimeout(() => { if (!started.has("scan")) { started.add("scan"); initScan(); } }, 800);

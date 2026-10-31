@@ -1,4 +1,4 @@
-// Ultrasound demo tab: the image is classified in the browser and a highlight map shows where the model looked.
+// Ultrasound scan tab
 import { loadModel, classify, cam, drawCam, colourfulness, loadImage, drawImageFit } from "./ml.js";
 import { esc } from "./report.js";
 

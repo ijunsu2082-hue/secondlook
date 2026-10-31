@@ -1,6 +1,6 @@
 # Evaluation history
 
-Every run is added here by `node eval/run.mjs`. Nothing is removed. `results.md` always holds the latest run only. The first run is kept in full in `results-run1-before-fixes.md`.
+EWe added every run here through `node eval/run.mjs` and have removed nothing. `results.md` always holds the latest run only and our first run is in full in `results-run1-before-fixes.md`.
 
 Runs before this file existed (recorded by hand from the console output):
 

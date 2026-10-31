@@ -206,7 +206,7 @@ td.num { font-variant-numeric: tabular-nums; text-align: right; }
   .wrap { padding: 0 16px; }
 }
 
-/* ---- Chat ---- */
+/* chat */
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .chat { margin-top: 24px; }
 .chat-log { display: flex; flex-direction: column; gap: 10px; max-height: 480px; overflow-y: auto; padding: 4px 2px; }
@@ -226,7 +226,7 @@ td.num { font-variant-numeric: tabular-nums; text-align: right; }
 .drop:focus-within { outline: 3px solid var(--accent); outline-offset: 2px; }
 #scan-canvas { max-width: 100%; height: auto; }
 
-/* ---- Accessibility and small screens ---- */
+/* a11y + small screens */
 .skip { position: absolute; left: 8px; top: -60px; z-index: 50; background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: 8px; }
 .skip:focus { top: 8px; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
@@ -242,9 +242,7 @@ main:focus, h2:focus { outline: none; }
   .row { flex-wrap: wrap; }
 }
 
-/* =====================================================================
-   Visual refresh: calmer spacing, clearer hierarchy, friendlier cards
-   ===================================================================== */
+/* new colours and spacing */
 :root {
   --accent-dark: #8f2b47;
   --radius: 16px;
@@ -274,7 +272,7 @@ h3 { font-size: 18px; }
 .card, .stat, .birads, .annotated { border-radius: var(--radius); }
 .card { padding: 22px; }
 
-/* ---- home: hero ---- */
+/* home: hero */
 .hero { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, .8fr); gap: 44px; align-items: center; padding: 28px 0 12px; }
 .hero h1 { font-size: clamp(32px, 4.4vw, 52px); max-width: 17ch; margin-bottom: .45em; }
 .hero .lede { max-width: 56ch; }
@@ -289,20 +287,20 @@ h3 { font-size: 18px; }
 .steps li span { color: var(--muted); font-size: 14.5px; }
 .privacy-chip { margin: 18px 0 0; padding: 10px 14px; border-radius: 12px; background: var(--ok-soft); color: #1f5a41; font-size: 14px; font-weight: 600; }
 
-/* ---- home: stats ---- */
+/* home: stats */
 .stats { gap: 18px; margin-top: 40px; }
 .stat { padding: 22px; box-shadow: var(--shadow); border-top: 4px solid var(--accent); display: flex; flex-direction: column; gap: 6px; }
 .stat b { font-size: 40px; line-height: 1.05; }
 .stat span { font-size: 15px; line-height: 1.5; }
 
-/* ---- home: feature cards ---- */
+/* home: feature cards */
 .cards.three { gap: 18px; margin-top: 32px; }
 .card.link { position: relative; padding: 24px; }
 .card.link:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); border-color: var(--accent); }
 .num-badge { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 800; font-size: 14px; margin-bottom: 12px; }
 .card.link h3 { font-family: var(--serif); font-size: 21px; }
 
-/* ---- home: words guide ---- */
+/* home: words guide */
 .words { margin-top: 36px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 26px; box-shadow: var(--shadow); }
 .words h3 { font-family: var(--serif); font-size: 24px; margin-bottom: 16px; }
 .words-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px 22px; margin: 0; }
@@ -311,13 +309,13 @@ h3 { font-size: 18px; }
 .words-grid dd { margin: 0; color: var(--ink); font-size: 14.5px; line-height: 1.5; }
 .disclaimer { border-left: 4px solid var(--watch); background: var(--watch-soft); color: #5c3d08; border-radius: 12px; font-size: 14.5px; }
 
-/* ---- report tab ---- */
+/* report tab */
 .report-grid { gap: 28px; }
 .examples .btn.small { background: var(--surface); }
 textarea { border-radius: 14px; box-shadow: inset 0 1px 2px rgba(43, 35, 33, .04); }
 .empty { background: var(--surface); border-radius: var(--radius); padding: 36px 28px; }
 
-/* ---- chat ---- */
+/* chat */
 .chat { margin-top: 32px; padding: 26px; border-radius: 20px; box-shadow: var(--shadow); }
 .chat > h3 { font-family: var(--serif); font-size: 24px; }
 .gate { border: 2px solid var(--accent-soft); background: linear-gradient(180deg, #fff7f9, #fff); border-radius: 16px; padding: 22px; margin: 14px 0; }
@@ -335,12 +333,12 @@ textarea { border-radius: 14px; box-shadow: inset 0 1px 2px rgba(43, 35, 33, .04
 .msg-note { border-radius: 10px; font-weight: 600; font-size: 14.5px; }
 .lock-note { margin: 10px 0 0; }
 
-/* ---- scan / check / lab ---- */
+/* scan / check / lab */
 .verdict { border-radius: var(--radius); }
 .metrics .metric { border-radius: 14px; }
 .advice { border-radius: var(--radius); }
 
-/* ---- about: who does what ---- */
+/* about: who does what */
 .jobs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 12px 0 16px; }
 .job { border-radius: 14px; padding: 16px; border: 1px solid var(--line); background: var(--surface-2); }
 .job b { display: block; margin: 8px 0 4px; font-size: 16px; }
@@ -353,10 +351,10 @@ textarea { border-radius: 14px; box-shadow: inset 0 1px 2px rgba(43, 35, 33, .04
 .job.llm { border-top: 4px solid var(--accent); }
 .job.img { border-top: 4px solid var(--ok); }
 
-/* ---- footer ---- */
+/* footer */
 .foot { background: var(--surface); border-top: 1px solid var(--line); margin-top: 24px; }
 
-/* ---- phones ---- */
+/* phones */
 @media (max-width: 860px) {
   .hero { grid-template-columns: minmax(0, 1fr); gap: 24px; }
   .jobs { grid-template-columns: minmax(0, 1fr); }
@@ -370,18 +368,13 @@ textarea { border-radius: 14px; box-shadow: inset 0 1px 2px rgba(43, 35, 33, .04
   .cta-row .btn { flex: 1 1 100%; justify-content: center; }
 }
 
-/* "Words in this answer" box under a reply */
+/* the "words" box under a chat reply */
 .msg-words { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: var(--info-soft); color: #25405a; font-size: 14px; }
 .msg-words dl { margin: 6px 0 0; display: grid; gap: 4px; }
 .msg-words dt { font-weight: 800; }
 .msg-words dd { margin: 0 0 4px; }
 
-/* =====================================================================
-   Report sanity warnings
-   Shown above the decoded report when the text has a value that looks
-   wrong or parts that seem to disagree. The labels describe the text,
-   not the person's health.
-   ===================================================================== */
+/* report warnings */
 .sanity { border: 1px solid #e0b660; border-left: 8px solid var(--watch); background: var(--watch-soft); color: #4a3206; border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow); }
 .sanity:focus { outline: none; }
 .sanity:focus-within, .sanity:focus-visible { outline: 3px solid color-mix(in srgb, var(--watch) 45%, transparent); outline-offset: 2px; }
@@ -400,20 +393,20 @@ textarea { border-radius: 14px; box-shadow: inset 0 1px 2px rgba(43, 35, 33, .04
 .lvl-conflict { background: #f8d4dc; color: #7a1d36; border-color: #cf6a86; }
 .lvl-unreadable { background: #dfe7f1; color: #1f3a57; border-color: #7d98b6; }
 
-/* A calm information line (not a warning) */
+/* info line */
 .note-info { background: var(--info-soft); color: #25405a; border: 1px solid #b9cbe0; border-radius: 12px; padding: 12px 14px; font-size: 14.5px; overflow-wrap: anywhere; }
 .note-info b { display: block; margin-bottom: 2px; }
 .note-info p { margin: 0; }
 
-/* Small tags on BI-RADS cards */
+/* tags on birads cards */
 .birads-tag { display: inline-block; margin: 0 0 8px; padding: 3px 10px; border-radius: 99px; background: var(--info-soft); color: #25405a; border: 1px solid #b9cbe0; font-size: 12.5px; font-weight: 700; }
 
-/* Flags inside the report text */
+/* flags in report text */
 mark.flag { background: #fde9b8; color: inherit; border-bottom: 2px dotted #a86a00; border-radius: 3px; padding: 0 2px; cursor: help; }
 mark.flag::after { content: " check"; font: 800 10.5px/1 var(--font); letter-spacing: .03em; text-transform: uppercase; color: #6b3f00; background: #fff; border: 1px solid #d99a2b; border-radius: 6px; padding: 1px 4px; margin-left: 4px; vertical-align: middle; white-space: nowrap; }
 .flag-chip { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 99px; background: #fde3b0; color: #5a3600; border: 1px solid #d99a2b; font-size: 12px; font-weight: 800; vertical-align: middle; }
 
-/* Positions the diagram could not use */
+/* positions diagram */
 .unplaced { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--watch-soft); border: 1px solid #ecd29a; color: #4a3206; font-size: 14.5px; }
 .unplaced b { display: block; margin-bottom: 4px; }
 .unplaced ul { margin: 6px 0; padding-left: 20px; }
@@ -424,7 +417,7 @@ mark.flag::after { content: " check"; font: 800 10.5px/1 var(--font); letter-spa
   .sanity h3 { font-size: 20px; }
 }
 
-/* Report upload (photo or PDF) */
+/* report upload */
 #report-drop { margin: 0 0 10px; }
 .ocr-status { margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: var(--info-soft); color: #2c4560; font-size: 14.5px; line-height: 1.5; }
 .ocr-status[data-kind="ok"] { background: var(--watch-soft); color: #5c3d08; }
