@@ -176,10 +176,13 @@ mark.t-info { border-color: var(--info); background: var(--info-soft); }
 .gauge i { position: absolute; top: -6px; width: 4px; height: 30px; background: var(--ink); border-radius: 2px; transform: translateX(-2px); transition: left .3s; }
 
 /* about */
-.about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-table { border-collapse: collapse; width: 100%; font-size: 14px; overflow-wrap: anywhere; }
+.about-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 540px), 1fr)); gap: 18px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; overflow-wrap: break-word; }
 th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
 th { color: var(--muted); font-weight: 600; }
+/* Keeps row headers from breaking mid word */
+th[scope], tbody th, td:first-child { overflow-wrap: normal; word-break: normal; hyphens: manual; }
+tbody th { min-width: 8.5rem; width: 22%; }
 td.num { font-variant-numeric: tabular-nums; text-align: right; }
 .flow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 14px; }
 .flow span { background: var(--surface-2); padding: 8px 12px; border-radius: 10px; }
@@ -422,3 +425,11 @@ mark.flag::after { content: " check"; font: 800 10.5px/1 var(--font); letter-spa
 .ocr-status { margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: var(--info-soft); color: #2c4560; font-size: 14.5px; line-height: 1.5; }
 .ocr-status[data-kind="ok"] { background: var(--watch-soft); color: #5c3d08; }
 .ocr-status[data-kind="bad"] { background: var(--act-soft); color: #7a1f1f; }
+
+/* About tables on phones: label sits above its text so the text gets the full width */
+@media (max-width: 600px) {
+  tbody tr:has(> th) { display: block; border-bottom: 1px solid var(--line); }
+  tbody tr:has(> th) > th, tbody tr:has(> th) > td { display: block; width: auto; min-width: 0; border: 0; padding: 3px 10px; }
+  tbody tr:has(> th) > th { padding-top: 10px; }
+  tbody tr:has(> th) > td { padding-bottom: 10px; }
+}
