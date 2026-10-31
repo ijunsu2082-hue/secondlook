@@ -1,6 +1,4 @@
-// Conversation panel under the report decoder. It sends the decoded report as
-// context to /api/chat (a server function that holds the API key).
-// Nothing is sent until the person has read the privacy box and agreed.
+// Chat panel
 const $ = (s) => document.querySelector(s);
 
 const GENERAL_PROMPTS = [
@@ -17,12 +15,12 @@ const FEATURE_LINKS = {
 };
 const MAX_SENT = 18;
 
-let report = null;          // { text, parsed } from the decoder, or null
-let messages = [];          // what the server sees: { role, content }
+let report = null;          // Decoded report or null
+let messages = [];          // Messages list
 let busy = false;
 let lastUser = null;
-let consented = false;      // lasts for this page visit only, so a reload asks again
-const explained = new Set(); // medical words whose meaning we have already shown, so we do not repeat them
+let consented = false;      // Privacy agreed flag
+const explained = new Set(); // Words already defined
 
 export function setReportContext(ctx) {
   report = ctx && ctx.text && ctx.text.trim() ? ctx : null;
@@ -72,7 +70,7 @@ function bubble(role, content) {
   return d;
 }
 
-// Paragraphs and "- " lists, built with text nodes so nothing from the server is parsed as HTML.
+// Builds paragraphs and lists
 function addText(parent, text) {
   let list = null;
   for (const line of text.split(/\n+/)) {
@@ -100,7 +98,7 @@ function note(parent, text) {
   parent.prepend(n);
 }
 
-// "Words in this answer": fixed definitions the server adds for medical words the reply did not explain.
+// Words box under a reply
 function wordsBox(parent, words) {
   const fresh = (words || []).filter((w) => !explained.has(w.term));
   if (!fresh.length) return;
@@ -132,8 +130,7 @@ function featureChip(parent, feature) {
   parent.append(a);
 }
 
-// Other parts of the page call this (for example "Ask the assistant to tailor these").
-// If the person has not agreed yet, take them to the privacy box instead of sending anything.
+// Sends a question from elsewhere on the page
 export function ask(text) {
   $("#chat")?.scrollIntoView({ behavior: "smooth", block: "start" });
   if (!consented) {
@@ -164,7 +161,7 @@ async function send(text) {
       body: JSON.stringify({ consent: true, known: [...explained], messages: messages.slice(-MAX_SENT), report: report && { text: report.text, parsed: summarize(report.parsed) } }),
     });
     let data = null;
-    try { data = await res.json(); } catch { /* not JSON */ }
+    try { data = await res.json(); } catch { /* bad JSON */ }
     pending.remove();
     if (res.ok && data?.reply) {
       messages.push({ role: "assistant", content: data.reply });
@@ -209,7 +206,7 @@ function setBusy(on) {
   if (!on) $("#chat-input").focus({ preventScroll: true });
 }
 
-// Only the parts the server prompt uses, so the request stays small.
+// Trimmed report context
 function summarize(p) {
   if (!p) return null;
   return { birads: p.birads, density: p.density, findings: (p.findings || []).map(({ side, hour, distCm, sizeCm }) => ({ side, hour, distCm, sizeCm })) };

@@ -1,5 +1,4 @@
-// Runs the conversation set against the real assistant and writes eval/results.md.
-// Needs OPENAI_API_KEY (read from the environment or .env). Costs a small amount of API credit.
+// Runs the conversation set and writes eval/results.md
 // Usage: node eval/run.mjs [--limit 20] [--cat urgent] [--id birads-01,unc-01]
 import fs from "node:fs";
 import path from "node:path";
@@ -74,7 +73,7 @@ const md = [
   ...(results.filter((r) => r.fails.length).map((r) => `- **${r.id}**: ${r.fails.join("; ")}\n  > ${(r.reply || "").replace(/\n+/g, " ").slice(0, 280)}`)),
   "",
 ].join("\n");
-const partial = args.length > 0;   // filtered runs must not overwrite the latest full results
+const partial = args.length > 0;   // Filtered run
 fs.writeFileSync(path.join(here, partial ? "results-partial.md" : "results.md"), md);
 const failedIds = results.filter((x) => x.fails.length).map((x) => x.id).join(", ") || "none";
 fs.appendFileSync(path.join(here, "history.md"), `| ${new Date().toISOString().slice(0, 16).replace("T", " ")} | ${model} | ${passed}/${results.length} | ${args.length ? "partial run: " + args.join(" ") : "full"} | ${failedIds} |

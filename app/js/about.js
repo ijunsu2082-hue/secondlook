@@ -1,4 +1,4 @@
-// "How it works": what each part does, where the data and models come from, and what the limits are.
+// About tab
 import { TERMS } from "./knowledge.js";
 const $ = (s) => document.querySelector(s);
 const pm = (o) => `${o.mean.toFixed(3)} ± ${o.std.toFixed(3)}`;
@@ -28,13 +28,13 @@ export async function initAbout() {
 
   body.innerHTML = `
   <div class="card">
-    <h3>Rules, a language model and an image model: each does its own job</h3>
+    <h3>Here's a little about our rule set, language model, and image model!</h3>
     <div class="jobs">
-      <div class="job rules"><span class="job-tag">Fixed rules</span><b>Reads your report</b><p>Finds the BI-RADS score, breast density, where the finding is, and what each word means. The same report always gives the same answer, and nothing is made up.</p></div>
-      <div class="job llm"><span class="job-tag">Language model</span><b>Explains and answers</b><p>Uses what the rules found to explain it in everyday words, answer follow-up questions, and write questions for your doctor. It can be wrong, so it has fixed safety notes around it.</p></div>
+      <div class="job rules"><span class="job-tag">Fixed rules</span><b>Reads your report</b><p>Finds the BI-RADS score, breast density, where the finding is, and what each word means. The same report always gives the same answer, and we make sure nothing is made up.</p></div>
+      <div class="job llm"><span class="job-tag">Language model</span><b>Explains and answers</b><p>Uses what the rules found to explain it in everyday words, answer follow-up questions, and write questions for your doctor. It can be wrong, so we made sure to put safety notes around it.</p></div>
       <div class="job img"><span class="job-tag">Our image model</span><b>Looks at ultrasound pictures</b><p>A separate research demo. It looks at the pixels of an ultrasound image. It does not feed into the report reader or the chat.</p></div>
     </div>
-    <p class="muted" style="margin-bottom:0"><b>What stays on your device:</b> explaining a report, the ultrasound demo, the symptom check and the biopsy lab all run in your browser.
+    <p class="muted" style="margin-bottom:0"><b>What stays on your device:</b> explaining a report, the ultrasound demo, the symptom check and the biopsy lab all run in your browser.ㅤㅤㅤㅤㅤ
       <b>What is sent out:</b> only the chat, and only after you agree. Your message and your report text go to our server, which passes them to OpenAI to write an answer.
       Our server does not store them. OpenAI may keep them for a short time under its own rules.</p>
   </div>

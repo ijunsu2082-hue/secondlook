@@ -1,7 +1,4 @@
-// Smoke test for a running copy of SecondLook (local or deployed).
-// Usage: node tests/live-check.mjs https://your-site.netlify.app
-//        node tests/live-check.mjs            (defaults to http://localhost:8000)
-// It sends a few real chat requests, so it uses a very small amount of API credit.
+// Smoke test of a running site
 const base = (process.argv[2] || "http://localhost:8000").replace(/\/$/, "");
 let failed = 0;
 const check = (name, ok, extra = "") => { if (!ok) failed++; console.log((ok ? "PASS " : "FAIL ") + name + (extra ? "  " + extra : "")); };

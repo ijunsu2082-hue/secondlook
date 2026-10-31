@@ -1,5 +1,5 @@
-// Local server: serves app/ and runs the same chat function Netlify runs.
-// Reads OPENAI_API_KEY from .env (gitignored). Usage: node dev-server.mjs
+// Local server for app/ and the chat function
+// Usage: node dev-server.mjs
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
@@ -11,7 +11,7 @@ try {
     const m = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*?)\s*$/);
     if (m && !line.trim().startsWith("#") && !(m[1] in process.env)) process.env[m[1]] = m[2];
   }
-} catch { /* no .env: the assistant will say it is not set up */ }
+} catch { /* no .env */ }
 
 const { default: chat } = await import("./netlify/functions/chat.mjs");
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".css": "text/css", ".json": "application/json",

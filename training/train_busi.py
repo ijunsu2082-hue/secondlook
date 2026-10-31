@@ -1,25 +1,5 @@
-"""Breast ultrasound classifier (normal / benign / malignant) on BUSI.
-
-Dataset: Al-Dhabyani W, Gomaa M, Khaled H, Fahmy A. Dataset of breast
-ultrasound images. Data in Brief 28 (2020) 104863. doi:10.1016/j.dib.2019.104863
-780 images from 600 women aged 25-75 (Baheya Hospital, Cairo, 2018).
-
-Known problem: Pawłowska et al. (Data in Brief 2023, PMC10293973) found 235
-duplicate images in BUSI, including 8 that appear in BOTH the benign and the
-malignant folders. Random splits therefore leak test images into training.
-
-Protocol (why our numbers can be trusted):
-  * segmentation masks are excluded; only the ultrasound images are used
-  * duplicates are found two ways — a pixel hash and pretrained-feature cosine
-    similarity — and grouped so a group never straddles train and test
-  * groups containing BOTH benign and malignant labels are removed (label conflict)
-  * 5-fold stratified, grouped cross-validation; the regularisation strength is
-    chosen by an inner grouped CV, so the test fold is never seen
-  * model = frozen ImageNet EfficientNet-B0 + logistic regression ("linear probe")
-  * the deployed model is fold 1's; its demo images come from its own test fold
-
-Usage: python train_busi.py --data /path/to/Dataset_BUSI_with_GT --out ../app [--compare]
-"""
+# Trains the ultrasound classifier on BUSI (normal / benign / malignant)
+# Usage: python train_busi.py --data /path/to/Dataset_BUSI_with_GT --out ../app [--compare]
 import argparse
 import random
 import shutil
@@ -47,8 +27,7 @@ def load(data_dir):
             if "_mask" in p.name:
                 continue
             im = Image.open(p).convert("RGB")
-            # Shrink once (max side 288) to fit an 8 GB laptop; demo images are
-            # saved from these same pixels so browser and Python see the same input.
+            # Shrinks to max 288
             im.thumbnail((288, 288), Image.LANCZOS)
             images.append(im)
             labels.append(k)
@@ -57,7 +36,7 @@ def load(data_dir):
 
 
 def fit_probe(F, Ff, y, groups, idx, seed):
-    """Logistic regression on frozen features; flipped copies augment training."""
+    # Fits the classifier on the frozen features
     X = np.concatenate([F[idx], Ff[idx]])
     yy = np.concatenate([y[idx], y[idx]])
     gg = np.concatenate([groups[idx], groups[idx]])
@@ -128,7 +107,7 @@ def main():
     F = C.extract(backbone, images, dev, log=log)
     Ff = C.extract(backbone, images, dev, flip=True, log=log)
 
-    # ---------------------------------------------------- duplicates & conflicts
+    # ---------------------------------------------------- Duplicates and conflicts
     Fa = (F + Ff) / 2
     center = Fa.mean(0)
     thr, calib = C.calibrate_threshold(backbone, images, center, dev, log=log)
@@ -152,7 +131,7 @@ def main():
     y, groups, F, Ff = y[keep], groups[keep], F[keep], Ff[keep]
     log(f"Clean set: {len(y)} images", {c: int((y == k).sum()) for k, c in enumerate(CLASSES)})
 
-    # ---------------------------------------------------- cross-validation
+    # ---------------------------------------------------- Cross-validation
     log("\nEfficientNet-B0 linear probe, 5-fold grouped CV:")
     cv, oof, fold_metrics, models = cross_validate(F, Ff, y, groups, args.folds, args.seed, log)
     pooled = C.metrics(oof, y, CLASSES, positive=[MALIGNANT])
@@ -192,7 +171,7 @@ def main():
     }
     C.save_json(summary, results_dir / "busi_metrics.json")
 
-    # ---------------------------------------------------- export fold 1
+    # ---------------------------------------------------- Export fold 1
     scaler, lr, te, p = models[0]
     out = Path(args.out)
     (out / "models").mkdir(parents=True, exist_ok=True)
@@ -213,7 +192,7 @@ def main():
         "backbone_comparison": comparison,
     }, out / "models" / "busi_model.json")
 
-    # Demo images: 2 random per class from the deployed model's own test fold.
+    # Demo images, 2 per class
     sdir = out / "samples"
     shutil.rmtree(sdir, ignore_errors=True)
     sdir.mkdir()

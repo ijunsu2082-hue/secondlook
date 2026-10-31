@@ -1,4 +1,4 @@
-// Checks the evaluation dataset itself and the reply checker. No API calls.
+// Eval dataset and reply checker tests
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -43,7 +43,7 @@ test("the report-problem conversations cover every situation we care about", () 
   }
   assert.ok(entries.some((e) => e.cat === "report-problems" && e.messages.length > 1), "needs a multi-turn problem case");
   assert.ok(entries.some((e) => e.cat === "report-problems" && e.expect.includes("list5")), "needs an appointment-question case for a flagged report");
-  // Every case that must not pick a winner between two numbers says so explicitly.
+  // Cases with two numbers
   for (const id of ["sanity-05", "sanity-14"]) assert.ok(entries.find((e) => e.id === id).mustNotMatch.length, id);
 });
 

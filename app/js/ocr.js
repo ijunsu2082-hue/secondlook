@@ -1,10 +1,8 @@
-// Turns a photo or a PDF of a report into text, on this device.
-// The libraries and the English language file are served from our own site (app/vendor),
-// so the picture is never sent anywhere and no outside site is contacted.
+// Photo and PDF to text
 const MAX_BYTES = 20 * 1024 * 1024;
 const MAX_PAGES = 6;
-const MAX_SIDE = 2400;   // larger photos are shrunk first so reading stays fast
-const MIN_PDF_TEXT = 80; // fewer characters than this and we treat the PDF as a scan
+const MAX_SIDE = 2400;   // Longest photo side
+const MIN_PDF_TEXT = 80; // Minimum text for a text PDF
 
 const base = (p) => new URL(p, import.meta.url).href;
 
@@ -55,7 +53,7 @@ async function imageToCanvas(file) {
   } finally { URL.revokeObjectURL(url); }
 }
 
-// Joins the text pieces of one PDF page into lines.
+// Joins PDF page pieces into lines
 function pageText(content) {
   let out = "", lastY = null;
   for (const it of content.items) {
@@ -70,7 +68,7 @@ function pageText(content) {
   return out.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 
-// Returns { text, method: "pdf-text" | "ocr", pages, confidence (0 to 100 or null), truncated }.
+// Reads a file into text
 export async function extractText(file, onStatus = () => {}) {
   if (!file) throw new Error("none");
   if (file.size > MAX_BYTES) throw Object.assign(new Error("big"), { code: "big" });
@@ -91,7 +89,7 @@ export async function extractText(file, onStatus = () => {}) {
     if (joined.replace(/\s/g, "").length >= MIN_PDF_TEXT) {
       return { text: joined, method: "pdf-text", pages, confidence: null, truncated };
     }
-    // A scanned PDF has no text inside, so draw each page and read it like a photo.
+    // Scanned PDF pages
     const canvases = [];
     for (let i = 1; i <= pages; i++) {
       onStatus(`Preparing page ${i} of ${pages}...`);

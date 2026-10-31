@@ -1,13 +1,11 @@
-// Server-side logic for the chat assistant. No browser code lives here and the
-// API key is only ever read from the environment.
+// Server logic for the chat assistant
 import { SYSTEM_PROMPT, buildContext, runReportCheck } from "./prompt.mjs";
 import { missingDefinitions } from "./glossary.mjs";
 
 export const LIMITS = { messages: 20, messageChars: 2000, reportChars: 12000 };
 const FEATURES = new Set(["report", "scan", "check", "lab"]);
 
-// Plain words that mean "get help soon or now". Checked on the person's words,
-// not on the model's, so the safety message never depends on the model.
+// Words that mean get help now
 const EMERGENCY = [
   /chest pain/i, /can'?t breathe|cannot breathe|trouble breathing|short(ness)? of breath/i,
   /faint(ed|ing)?|passed out/i, /soaking .*(pad|bandage)|won'?t stop bleeding|heavy bleeding/i,
@@ -27,12 +25,11 @@ export const SOON_NOTE =
 
 export const NO_GUARANTEE_NOTE =
   "One thing to keep in mind: no scan or test can promise that someone does not have cancer. A normal result is a good sign, but if you notice a new change in your breast, please have it checked.";
-// Someone treating a good result as proof they are cancer free.
+// Good result read as cancer free
 const ASSUMES_CLEAR = /(definitely|certainly|for sure|100%|totally|completely)[^.?!]{0,20}(don'?t|do not|doesn'?t|no) (have|cancer)|means? (i|that i) (don'?t|do not|am not|have no)[^.?!]{0,12}cancer|cancer[- ]free|in the clear/i;
 export const needsCaution = (text) => ASSUMES_CLEAR.test(text);
 
-// Shown when the server's own rule check finds something odd in the report text. It does not
-// depend on the model, so the person sees it even if the model forgets to mention the problem.
+// Note shown when the report check finds something odd
 export const REPORT_CHECK_NOTE =
   "Heads up: the automatic check found something in your report text that may be a copy or typing mistake, or may not match. Please check the original report or ask your imaging team to explain it.";
 export const SCAN_NOTE =
@@ -66,7 +63,7 @@ export function validate(body) {
   return null;
 }
 
-// Fix style slips from the model without changing meaning, and pull out the feature tag.
+// Cleans up the reply + pulls out the feature tag
 export function cleanReply(raw) {
   let text = String(raw || "");
   let feature = null;
@@ -75,7 +72,7 @@ export function cleanReply(raw) {
   return { text, feature };
 }
 
-// Phrases that break the rules no matter what the question was. Checked on every reply.
+// Phrases the reply must never say
 const FALSE_REASSURANCE = /nothing to worry about|no need to (worry|panic)|you(?:'| a)re (fine|in the clear|ok(ay)?)\b|don'?t worry|do not worry|this is not serious|nothing serious|it will be (ok|okay|fine)/i;
 const DIAGNOSIS = /(?<!(not|n't|whether|if|cannot|can't) )\byou (do not|don'?t)? ?have (breast )?cancer\b(?! or)/i;
 export function violations(text) {
@@ -86,7 +83,7 @@ export function violations(text) {
   return bad;
 }
 
-// Links to other parts of the app are chosen by plain rules, so they work even if the model forgets the tag.
+// Picks links to other parts of the app
 const FEATURE_RULES = [
   ["lab", /biopsy lab|the lab\b|cell measurements/i],
   ["scan", /upload[^.?!]{0,40}(ultrasound|image|picture|scan)|ultrasound (ai|demo|image|picture)|(ultrasound|image|picture)[^.?!]{0,30}(ai|computer)/i],
@@ -142,14 +139,14 @@ export async function respond(body, { apiKey, model = "gpt-4o-mini", fetchImpl =
   }
   if (out.error) return { status: 502, json: { error: out.error, note } };
   const feature = out.feature || suggestFeature(last);
-  // The server runs its own rule check on the report text. It never trusts the page for this.
+  // Report check
   const check = body.report?.text ? runReportCheck(body.report.text) : null;
   const flagged = !!(check && check.warnings && check.warnings.length);
   const baseNote = note || (feature === "scan" ? SCAN_NOTE : null);
   return { status: 200, json: { reply: out.text, feature, note: baseNote || (flagged ? REPORT_CHECK_NOTE : null), reportCheck: flagged, urgency: level, words: missingDefinitions(out.text, body.known || []) } };
 }
 
-// Simple per-address limit. In-memory, so it resets when the function restarts.
+// Rate limit per ip
 const hits = new Map();
 export function rateLimited(key, max = 20, windowMs = 60000, now = Date.now()) {
   const recent = (hits.get(key) || []).filter((t) => now - t < windowMs);

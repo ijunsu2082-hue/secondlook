@@ -1,4 +1,4 @@
-// Re-checks the saved replies in results.json with the current rules. No API calls.
+// Re-scores saved results.json
 import fs from "node:fs";
 import { checkReply } from "./checks.mjs";
 const here = new URL(".", import.meta.url);

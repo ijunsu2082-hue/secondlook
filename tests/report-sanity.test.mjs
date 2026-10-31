@@ -1,7 +1,4 @@
-// Adversarial tests for the report sanity check (app/js/sanity.js). Every report below is fictional.
-// The layer finds values that cannot be right, parts of a report that may disagree, and text it could not read.
-// It must never diagnose, never pick a winner between conflicting findings, never change a unit, side or
-// category, and never throw away a valid finding. Run with: node --test "tests/*.test.mjs"
+// Tests for app/js/sanity.js with fake reports
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -12,7 +9,7 @@ import { EXAMPLES } from "../app/js/knowledge.js";
 const ids = (r) => r.warnings.map((w) => w.id);
 const noteIds = (r) => r.notes.map((n) => n.id);
 const get = (r, id) => r.warnings.find((w) => w.id === id);
-// Spans must point at the original text, character for character.
+// Span text check
 const verbatim = (text, r) => {
   for (const w of r.warnings) {
     assert.equal(w.spans.length, w.evidence.length, w.id);
@@ -23,7 +20,7 @@ const BANNED = [/\bleverag/i, /\butiliz/i, /\bseamless/i, /\bcutting[- ]edge/i, 
 
 const NORMAL = "EXAM: Targeted ultrasound of the right breast.\nFINDINGS: At the right breast 10 o'clock, 3 cm from the nipple, there is an oval, circumscribed mass measuring 0.9 x 0.5 cm.\nIMPRESSION: Probably benign.\nBI-RADS 3: Probably benign.";
 
-// ---------------------------------------------------------------- 1 normal report
+// ---------------------------------------------------------------- 1 Normal report
 test("1. a normal report with one BI-RADS category and one valid clock position raises nothing", () => {
   const r = checkReport(NORMAL);
   assert.deepEqual(r.warnings, []);
@@ -40,7 +37,7 @@ test("1. a normal report with one BI-RADS category and one valid clock position 
   assert.deepEqual(p.findings.map((f) => [f.side, f.hour, f.distCm, f.sizeCm]), [["right", 10, 3, 0.9]]);
 });
 
-// ---------------------------------------------------------------- 2 to 4 clock positions
+// ---------------------------------------------------------------- 2 to 4 Clock positions
 test("2. 14 o'clock is flagged with its original text, and the valid position next to it is kept", () => {
   const t = "FINDINGS: A mass in the left breast at 14 o'clock measuring 1.2 cm and a cyst in the left breast at 3 o'clock. BI-RADS 4B.";
   const r = checkReport(t);
@@ -102,7 +99,7 @@ test("odd minutes, ranges and spelling variants of o'clock", () => {
   assert.deepEqual(ids(odd), ["clock-format"]);
   assert.equal(get(odd, "clock-format").level, "check");
   assert.deepEqual(checkReport("FINDINGS: A mass in the left breast at 2:30 o'clock.").warnings, []);
-  // regression: a range such as 2-3 o'clock is two positions, both valid
+  // Range such as 2-3 o'clock
   const range = checkReport("FINDINGS: A mass in the left breast at 2-3 o'clock.");
   assert.deepEqual(range.facts.clock.map((c) => [c.hours, c.valid]), [[[2, 3], true]]);
   const badRange = checkReport("FINDINGS: A mass in the left breast at 11 to 14 o'clock.");
@@ -113,7 +110,7 @@ test("odd minutes, ranges and spelling variants of o'clock", () => {
   }
 });
 
-// ---------------------------------------------------------------- 5, 6, 22, 23 measurements
+// ---------------------------------------------------------------- 5, 6, 22, 23 Measurements
 test("5. a 35 cm lesion is flagged for review, nothing is converted, and the finding is kept", () => {
   const t = "FINDINGS: Mass at the left breast 2 o'clock measuring 35 cm. BI-RADS 4C.";
   const r = checkReport(t);
@@ -272,9 +269,9 @@ test("a conflict about the same finding says so, and a stated change is only a n
   assert.deepEqual(changed.warnings, []);
   assert.deepEqual(noteIds(changed), ["birads-changed"]);
   assert.match(describeBirads(changed).sentence, /changed/);
-  // 4 and 4B are the same family, not a conflict
+  // 4 and 4B
   assert.deepEqual(checkReport("EXAM: Ultrasound of the left breast. FINDINGS: Mass at the left breast 2 o'clock. BI-RADS 4. IMPRESSION: BI-RADS 4B.").warnings, []);
-  // 4A and 4B are different
+  // 4A and 4B
   assert.ok(ids(checkReport("Mass at the left breast 2 o'clock. BI-RADS 4A. Impression BI-RADS 4B.")).includes("birads-conflict"));
 });
 
@@ -291,12 +288,12 @@ test("19. impossible BI-RADS values are flagged, kept as text, and left out of t
   const mixed = checkReport("FINDINGS: Mass at the left breast 2 o'clock. BI-RADS 7. IMPRESSION: BI-RADS 2.");
   assert.deepEqual(mixed.facts.birads.map((b) => b.category), ["2"]);
   assert.deepEqual(ids(mixed), ["birads-invalid"]);
-  // regression: the scale itself is not a category
+  // The scale wording
   assert.deepEqual(checkReport("FINDINGS: Mass at the left breast 2 o'clock. BI-RADS 0-6 is the scale radiologists use.").facts.birads, []);
   assert.ok(ids(checkReport("The BI-RADS category is pending.")).includes("birads-unreadable"));
 });
 
-// ---------------------------------------------------------------- 11 to 13 descriptions of one finding
+// ---------------------------------------------------------------- 11 to 13 Descriptions of one finding
 test("11. a simple cyst and a solid vascular mass at the same position may be one finding described two ways", () => {
   const t = "FINDINGS: At the left breast 2 o'clock there is a simple cyst. At the left breast 2 o'clock there is also a solid vascular mass.";
   const r = checkReport(t);
@@ -308,7 +305,7 @@ test("11. a simple cyst and a solid vascular mass at the same position may be on
   assert.ok(w.evidence.some((e) => /cyst/i.test(e)) && w.evidence.some((e) => /solid/i.test(e)));
   verbatim(t, r);
   assert.deepEqual(checkReport("FINDINGS: At the left breast 2 o'clock there is a simple cyst with a solid vascular mass.").warnings.map((x) => x.id), ["finding-cyst-solid"]);
-  // a complex cyst with a solid part is a real thing, not a contradiction
+  // Complex cyst with a solid part
   for (const ok of ["FINDINGS: At the left breast 2 o'clock there is a complex cystic and solid mass.", "FINDINGS: At the left breast 2 o'clock there is a complicated cyst with a solid component."]) {
     assert.deepEqual(checkReport(ok).warnings, [], ok);
   }
@@ -350,7 +347,7 @@ test("13. negation: 'no suspicious mass' and 'no vascularity' are not findings",
   ]) assert.deepEqual(checkReport(t).warnings, [], t);
 });
 
-// ---------------------------------------------------------------- 14, 15 family history
+// ---------------------------------------------------------------- 14, 15 Family history
 test("14. a family history question gives no family history, and 'history' alone is not one", () => {
   const t = "EXAM: Screening mammogram.\nHISTORY: Family history questionnaire not yet completed. Is there a family history of breast cancer?\nBI-RADS 1: Negative.";
   const f = familyHistory(t);
@@ -382,7 +379,7 @@ test("15. an explicit family history is picked up, a negated one is not", () => 
   assert.equal(familyHistory("Mass is dense relative to the surrounding tissue.").stated, false);
 });
 
-// ---------------------------------------------------------------- 16 left and right
+// ---------------------------------------------------------------- 16 Left and right
 test("16a. an exam line that names one breast while a finding names the other is a possible conflict", () => {
   const t = "EXAM: Targeted ultrasound of the right breast.\nFINDINGS: There is a 1.1 cm mass in the left breast at 2 o'clock.\nIMPRESSION: Probably benign mass. BI-RADS 3.";
   const r = checkReport(t);
@@ -391,7 +388,7 @@ test("16a. an exam line that names one breast while a finding names the other is
   assert.equal(w.level, "conflict");
   assert.match(w.detail, /did not change either side/);
   verbatim(t, r);
-  // not flagged: bilateral exams, matching sides, and a normal other breast
+  /// Bilateral and matching sides
   assert.ok(!ids(checkReport("EXAM: Bilateral screening mammogram.\nFINDINGS: Mass in the left breast at 2 o'clock. The right breast is unremarkable.")).includes("laterality-exam"));
   assert.deepEqual(checkReport("EXAM: Targeted ultrasound of the right breast.\nFINDINGS: Mass in the right breast at 10 o'clock.\nIMPRESSION: Right breast mass.").warnings, []);
   assert.deepEqual(checkReport("EXAM: Diagnostic mammogram of the left breast.\nFINDINGS: Mass in the left breast at 2 o'clock. The right breast is unremarkable.").warnings, []);
@@ -418,7 +415,7 @@ test("16c. one finding put in both breasts in one sentence is a possible conflic
   ]) assert.ok(!ids(checkReport(ok)).includes("laterality-both"), ok);
 });
 
-// ---------------------------------------------------------------- 17 malformed
+// ---------------------------------------------------------------- 17 Malformed input
 test("17. malformed text, odd spacing and stray characters never throw and still yield what is valid", () => {
   const t = "mass   left breast at 3 oclock   BI-RADS   4a  measuring 1,4 cm\n\n\n   cyst right  9 O'CLOCK";
   const r = checkReport(t);
@@ -445,7 +442,7 @@ test("text with nothing we can read says so, and a normal report does not", () =
   assert.ok(!ids(checkReport(NORMAL)).includes("nothing-readable"));
 });
 
-// ---------------------------------------------------------------- 24 fuzz and speed
+// ---------------------------------------------------------------- 24 Fuzz and speed
 test("24. fuzzing: random report-like strings never throw and are fast, and large inputs are capped", () => {
   const tokens = ["12", "0", "13", "14", "25", "100", "o'clock", "oclock", "BI-RADS", "BI-RADS 4B", "BIRADS 7", "category 3", "cm", "mm", "35", "1.4", "1,400", "x", "left", "right", "breast", "mass", "cyst", "solid", "vascular", "simple", "benign", "suspicious", "no", "not", ".", ",", ":", "\n", "  ", "measuring", "prior", "now", "family history", "grandmother", "breast cancer", "?", "’", "#", "FINDINGS:", "IMPRESSION:", "EXAM:", "previously", "upgraded", "lesion 1", "mass A"];
   let seed = 12345;
@@ -474,7 +471,7 @@ test("24. fuzzing: random report-like strings never throw and are fast, and larg
   }
 });
 
-// ---------------------------------------------------------------- 25 the built-in samples
+// ---------------------------------------------------------------- 25 Built-in samples
 test("25. the three built-in sample reports raise nothing", () => {
   EXAMPLES.forEach((e, i) => {
     const r = checkReport(e.text);
@@ -483,7 +480,7 @@ test("25. the three built-in sample reports raise nothing", () => {
   });
 });
 
-// ---------------------------------------------------------------- cross-cutting rules
+// ---------------------------------------------------------------- Rules for all reports
 const CORPUS = [
   NORMAL,
   "FINDINGS: A mass in the left breast at 14 o'clock measuring 1.2 cm. BI-RADS 4B.",

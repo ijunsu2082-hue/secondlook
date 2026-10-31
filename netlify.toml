@@ -1,4 +1,4 @@
-# Static site: no build step; publish the app/ folder as-is.
+# Static site, publishes app/
 [build]
   publish = "app"
 

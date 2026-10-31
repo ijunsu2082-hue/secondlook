@@ -1,5 +1,4 @@
-// Checks the writing rules for everything a person reads: no em or en dashes,
-// no buzzwords, no banned jargon, and US spelling. Run with: node --test "tests/*.test.mjs"
+// Lints the visible text
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -10,13 +9,13 @@ import { BIRADS, DENSITY, TERMS, QUESTIONS, EXAMPLES } from "../app/js/knowledge
 const read = (f) => fs.readFileSync(new URL("../" + f, import.meta.url), "utf8");
 const FILES = ["app/index.html", "app/js/report.js", "app/js/scan.js", "app/js/check.js", "app/js/lab.js", "app/js/about.js", "app/js/chat.js", "app/js/knowledge.js", "app/js/sanity.js", "app/js/ocr.js"];
 
-// Words that are fancy, vague or salesy. Add to this list when a new one shows up.
+// Banned buzzwords
 const BANNED = [/\bleverag/i, /\butiliz/i, /\bseamless/i, /\bcutting[- ]edge/i, /\brevolution/i, /\bempower/i, /\brobust\b/i,
   /\bstate[- ]of[- ]the[- ]art/i, /\bsynerg/i, /\bholistic/i, /\bgame[- ]chang/i, /\bnext[- ]gen/i, /\bfacilitat/i, /\bendeavo/i];
 const BRITISH = [/\btumour/i, /\bcentre\b/i, /\bregularis/i, /\banalys(e|ing|ed)\b/i, /\bgrey\b/i];
 const JARGON = [/Class Activation Map/i, /linear probe/i, /ONNX Runtime/i, /\bhallucinat/i];
 
-// Visible text only: drop code comments and lines that are plain code.
+// Keeps visible text only
 const visible = (src) => src.split("\n").filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
 
 for (const f of FILES) {
@@ -48,7 +47,7 @@ test("data in knowledge.js reads cleanly", () => {
 });
 
 test("assistant instructions and safety messages follow the same rules", () => {
-  // The prompt mentions dashes only to forbid them, so skip those rule lines.
+  // Skips the dash rule lines
   const prompt = SYSTEM_PROMPT.split("\n").filter((l) => !/em dashes or en dashes|utilize/.test(l)).join("\n");
   for (const t of [prompt, EMERGENCY_NOTE, SOON_NOTE, buildContext(null)]) {
     assert.deepEqual(t.match(/[—–]/g), null);

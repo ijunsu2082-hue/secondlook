@@ -1,5 +1,4 @@
-// Baseline tests for the report decoder, written before any changes so we can
-// tell if later edits broke it. Run with: node --test tests/
+// Decoder tests
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -53,12 +52,12 @@ test("imaging and lab model files are present and the ONNX file is non-trivial",
   for (const x of s) assert.ok(fs.existsSync(new URL("../app/" + x.file, import.meta.url)), x.file);
 });
 
-// ---- several positions in one sentence (regression: only the first used to be kept)
+// ---- Several positions in one sentence
 test("every valid clock position in a sentence becomes its own finding, with its own side", () => {
   const f = parseReport("A cyst at the right breast 3 o'clock and a mass at the left breast 9 o'clock, 4 cm from the nipple, measuring 1.1 cm.").findings;
   assert.equal(f.length, 2);
   assert.deepEqual([f[0].side, f[0].hour, f[1].side, f[1].hour], ["right", 3, "left", 9]);
-  // Distance and size belong to the second finding only.
+  // Distance and size of the second finding
   assert.equal(f[0].distCm, null);
   assert.equal(f[0].sizeCm, null);
   assert.equal(f[1].distCm, 4);
@@ -78,7 +77,7 @@ test("a position outside 1 to 12 is not turned into a finding, and valid ones ne
   assert.equal(parseReport("A cyst at 0 o'clock.").findings.length, 0);
 });
 
-// ---- what the page shows, built from the parser and the sanity check
+// ---- Page output
 const questionsFor = (text) => { const r = parseReport(text); return buildQuestions(r, checkReport(text)); };
 
 test("the built-in sample reports raise no warnings, so normal reports are not covered in alerts", () => {
@@ -94,7 +93,7 @@ test("appointment questions never say the person has a family history unless the
     assert.ok(!/my family history/i.test(qs), ex.title);
     assert.ok(qs.includes(QUESTIONS.family[0]), "the neutral question is still offered");
   }
-  // A question about family history is not a family history.
+  /// Asking about family history
   const asked = questionsFor("HISTORY: Family history questionnaire not yet completed. Is there a family history of breast cancer?\nBI-RADS 1: Negative.");
   assert.ok(!asked.join(" ").toLowerCase().includes("my family history"));
   assert.ok(!asked.includes(QUESTIONS.familyStated[0]));
@@ -128,6 +127,6 @@ test("two conflicting current numbers are described without choosing one", () =>
   assert.match(d.sentence, /more than one BI-RADS number/);
   assert.ok(d.sentence.includes("5") && d.sentence.includes("2"));
   assert.ok(!/Your report gives a BI-RADS 5/.test(d.sentence));
-  // Both numbers are still extracted from the text.
+  // Both numbers
   assert.deepEqual(parseReport(text).birads.sort(), ["2", "5"]);
 });
